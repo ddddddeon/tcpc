@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <thread>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <asio.hpp>
