@@ -11,14 +11,15 @@ using asio::ip::tcp;
 class Server
 {
 private:
-    int _port;
-    std::string _host;
     Logger _logger;
     int _running;
+    int _port;
+    std::string _host;
     std::list<tcp::socket> _sockets;
     std::list<std::thread> _threads;
 
     void Handle(tcp::socket &socket);
+    void Broadcast(std::string str);
 
 public:
     Server(std::string host, int port, Logger &logger)
@@ -31,7 +32,6 @@ public:
 
     void Start();
     void Stop();
-    void Broadcast(std::string str);
 };
 
 #endif /* !SOCKET_H */
