@@ -1,3 +1,6 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <string>
 
 #define INFO 0
@@ -19,3 +22,5 @@ public:
     void Warn(std::string str);
     void Error(std::string str);
 };
+
+#endif /* !LOGGER_H */

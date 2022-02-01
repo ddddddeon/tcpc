@@ -28,14 +28,13 @@ void Server::Handle(tcp::socket &socket)
 
         // TODO store this stuff in a connection class
         std::string address = GetAddress(socket);
+
         size_t s = asio::read_until(socket, buf, "\n");
-
-        std::list<tcp::socket>::iterator i;
-
         asio::streambuf::const_buffers_type bufs = buf.data();
         std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
         // broadcast to all connected sockets
+        std::list<tcp::socket>::iterator i;
         for (i = _sockets.begin(); i != _sockets.end(); i++)
         {
             // TODO all receiving clients should prepend a newline, but not the sender
