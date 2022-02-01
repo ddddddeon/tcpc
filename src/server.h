@@ -29,6 +29,7 @@ public:
 
     void Start();
     void Stop();
+    void Handle(tcp::socket &socket);
 };
 
 #endif /* !SOCKET_H */

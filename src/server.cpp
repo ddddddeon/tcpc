@@ -10,20 +10,28 @@ using asio::ip::tcp;
 using std::list;
 using std::string;
 
-void Handle(tcp::socket &socket)
+void Server::Handle(tcp::socket &socket)
 {
     int connected = 1;
 
     while (connected == 1)
     {
         asio::error_code ignored;
-        char str[1024];
         asio::streambuf buf;
 
         size_t s = asio::read_until(socket, buf, "\n");
-        buf.sgetn(str, s);
-        std::cout << str << std::endl;
-        asio::write(socket, asio::buffer("> "), ignored);
+
+        std::list<tcp::socket>::iterator i;
+
+        asio::streambuf::const_buffers_type bufs = buf.data();
+        std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
+
+        // broadcast to all connected sockets
+        for (i = _sockets.begin(); i != _sockets.end(); ++i)
+        {
+            asio::write(*i, asio::buffer(str), ignored);
+            asio::write(*i, asio::buffer("> "), ignored);
+        }
     }
 }
 
@@ -49,7 +57,7 @@ void Server::Start()
         string message = "hi\n> ";
         asio::write(socket, asio::buffer(message), ignored);
 
-        _threads.push_front(std::thread(Handle, std::ref(socket)));
+        _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket)));
     }
 }
 
