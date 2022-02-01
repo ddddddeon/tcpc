@@ -12,7 +12,9 @@ using std::string;
 
 std::string GetAddress(tcp::socket &s)
 {
-    return s.remote_endpoint().address().to_string() + ":" + std::to_string(s.remote_endpoint().port());
+    return s.remote_endpoint().address().to_string() +
+           ":" +
+           std::to_string(s.remote_endpoint().port());
 }
 
 void Server::Handle(tcp::socket &socket)
@@ -24,7 +26,7 @@ void Server::Handle(tcp::socket &socket)
         asio::error_code ignored;
         asio::streambuf buf;
 
-        // TODO store this in a connection class?
+        // TODO store this stuff in a connection class
         std::string address = GetAddress(socket);
         size_t s = asio::read_until(socket, buf, "\n");
 
@@ -58,10 +60,7 @@ void Server::Start()
         tcp::socket &socket = _sockets.front();
         acceptor.accept(socket);
 
-        // TODO DRY - store this stuff in a connection class
-        std::string remote_address = socket.remote_endpoint().address().to_string();
-        std::string remote_port = std::to_string(socket.remote_endpoint().port());
-        _logger.Info("Accepted connection from " + remote_address + ":" + remote_port);
+        _logger.Info("Accepted connection from " + GetAddress(socket));
 
         string message = "hi\n> ";
         asio::write(socket, asio::buffer(message), ignored);
