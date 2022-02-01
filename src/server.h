@@ -14,7 +14,7 @@ private:
     int _port;
     std::string _host;
     Logger _logger;
-    int _connected;
+    int _running;
     std::list<tcp::socket> _sockets;
     std::list<std::thread> _threads;
 
@@ -24,7 +24,7 @@ public:
         _host = host;
         _port = port;
         _logger = logger;
-        _connected = 0;
+        _running = 0;
     };
 
     void Start();

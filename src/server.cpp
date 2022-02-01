@@ -12,9 +12,9 @@ using std::string;
 
 void Handle(tcp::socket &socket)
 {
-    int is_connected = 1;
+    int connected = 1;
 
-    while (is_connected == 1)
+    while (connected == 1)
     {
         asio::error_code ignored;
         char str[1024];
@@ -33,10 +33,10 @@ void Server::Start()
     asio::io_service service;
     tcp::acceptor acceptor(service, tcp::endpoint(tcp::v4(), _port));
 
-    _connected = 1;
+    _running = 1;
     _logger.Info("Server listening on port " + std::to_string(_port));
 
-    while (_connected == 1)
+    while (_running == 1)
     {
         _sockets.push_front(tcp::socket(service));
         tcp::socket &socket = _sockets.front();
@@ -56,5 +56,5 @@ void Server::Start()
 void Server::Stop()
 {
     // TODO iterate through connections and close them
-    _connected = 0;
+    _running = 0;
 }
