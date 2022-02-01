@@ -7,8 +7,6 @@
 #include "server.h"
 
 using asio::ip::tcp;
-using std::list;
-using std::string;
 
 std::string GetAddress(tcp::socket &s)
 {
