@@ -23,9 +23,12 @@ install:
 	chmod a+x /usr/bin/$(NAME); \
 	echo "[OK] installed to /usr/bin/$(NAME)";
 
-memcheck:
+check:
 	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./bin/$(NAME)
 
+trace:
+	@strace ./bin/$(NAME)
+	
 all: $(NAME) findBin install
 
 rebuild: clean $(NAME) install
