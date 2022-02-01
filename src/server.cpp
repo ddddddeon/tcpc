@@ -34,6 +34,8 @@ void Server::Handle(tcp::socket &socket)
         std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
         Broadcast(str);
+
+        // TODO handle client disconnect
     }
 }
 
