@@ -58,6 +58,7 @@ void Server::Start()
         tcp::socket &socket = _sockets.front();
         acceptor.accept(socket);
 
+        // TODO DRY - store this stuff in a connection class
         std::string remote_address = socket.remote_endpoint().address().to_string();
         std::string remote_port = std::to_string(socket.remote_endpoint().port());
         _logger.Info("Accepted connection from " + remote_address + ":" + remote_port);
