@@ -33,7 +33,7 @@ void Server::Handle(tcp::socket &socket)
         asio::streambuf::const_buffers_type bufs = buf.data();
         std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
-        // broadcast to all connected sockets
+        // TODO move to Server::Broadcast()
         std::list<tcp::socket>::iterator i;
         for (i = _sockets.begin(); i != _sockets.end(); i++)
         {

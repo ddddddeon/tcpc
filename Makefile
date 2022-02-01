@@ -1,5 +1,5 @@
 NAME=socket
-LIBS=-lpthread -lboost_system
+LIBS=-lpthread
 CFLAGS=-g -Wall $(LIBS)
 
 CC=g++
