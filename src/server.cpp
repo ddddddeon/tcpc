@@ -10,6 +10,11 @@ using asio::ip::tcp;
 using std::list;
 using std::string;
 
+std::string GetAddress(tcp::socket &s)
+{
+    return s.remote_endpoint().address().to_string() + ":" + std::to_string(s.remote_endpoint().port());
+}
+
 void Server::Handle(tcp::socket &socket)
 {
     int connected = 1;
@@ -19,6 +24,8 @@ void Server::Handle(tcp::socket &socket)
         asio::error_code ignored;
         asio::streambuf buf;
 
+        // TODO store this in a connection class?
+        std::string address = GetAddress(socket);
         size_t s = asio::read_until(socket, buf, "\n");
 
         std::list<tcp::socket>::iterator i;
@@ -27,8 +34,9 @@ void Server::Handle(tcp::socket &socket)
         std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
         // broadcast to all connected sockets
-        for (i = _sockets.begin(); i != _sockets.end(); ++i)
+        for (i = _sockets.begin(); i != _sockets.end(); i++)
         {
+            // TODO all receiving clients should prepend a newline, but not the sender
             asio::write(*i, asio::buffer(str), ignored);
             asio::write(*i, asio::buffer("> "), ignored);
         }
