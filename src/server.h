@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 #include <asio.hpp>
+
 #include "logger.h"
 
 using asio::ip::tcp;

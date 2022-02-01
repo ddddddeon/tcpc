@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+
 #include "logger.h"
 
 std::string const levels[3] = {"INFO", "WARN", "ERROR"};
