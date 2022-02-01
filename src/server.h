@@ -1,5 +1,5 @@
-#ifndef SOCKET_H
-#define SOCKET_H
+#ifndef SERVER_H
+#define SERVER_H
 
 #include <string>
 #include <list>
@@ -34,4 +34,4 @@ public:
     void Stop();
 };
 
-#endif /* !SOCKET_H */
+#endif /* !SERVER_H */
