@@ -24,10 +24,10 @@ private:
 public:
     Server(std::string host, int port, Logger &logger)
     {
-        _host = host;
-        _port = port;
         _logger = logger;
         _running = 0;
+        _port = port;
+        _host = host;
     };
 
     void Start();
