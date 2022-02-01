@@ -33,14 +33,7 @@ void Server::Handle(tcp::socket &socket)
         asio::streambuf::const_buffers_type bufs = buf.data();
         std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
-        // TODO move to Server::Broadcast()
-        std::list<tcp::socket>::iterator i;
-        for (i = _sockets.begin(); i != _sockets.end(); i++)
-        {
-            // TODO all receiving clients should prepend a newline, but not the sender
-            asio::write(*i, asio::buffer(str), ignored);
-            asio::write(*i, asio::buffer("> "), ignored);
-        }
+        Broadcast(str);
     }
 }
 
@@ -59,12 +52,23 @@ void Server::Start()
         tcp::socket &socket = _sockets.front();
         acceptor.accept(socket);
 
-        _logger.Info("Accepted connection from " + GetAddress(socket));
-
-        string message = "hi\n> ";
-        asio::write(socket, asio::buffer(message), ignored);
+        std::string address = GetAddress(socket);
+        _logger.Info("Accepted connection from " + address);
+        Broadcast(address + " has entered the chat\n");
 
         _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket)));
+    }
+}
+
+void Server::Broadcast(std::string str)
+{
+    asio::error_code ignored;
+    std::list<tcp::socket>::iterator i;
+    for (i = _sockets.begin(); i != _sockets.end(); i++)
+    {
+        // TODO all receiving clients should prepend a newline, but not the sender
+        asio::write(*i, asio::buffer(str), ignored);
+        asio::write(*i, asio::buffer("> "), ignored);
     }
 }
 

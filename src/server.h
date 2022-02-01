@@ -18,6 +18,8 @@ private:
     std::list<tcp::socket> _sockets;
     std::list<std::thread> _threads;
 
+    void Handle(tcp::socket &socket);
+
 public:
     Server(std::string host, int port, Logger &logger)
     {
@@ -29,7 +31,7 @@ public:
 
     void Start();
     void Stop();
-    void Handle(tcp::socket &socket);
+    void Broadcast(std::string str);
 };
 
 #endif /* !SOCKET_H */
