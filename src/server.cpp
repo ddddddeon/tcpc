@@ -82,7 +82,7 @@ void Server::Broadcast(std::string str)
 int Server::Disconnect(tcp::socket &socket)
 {
     std::string address = GetAddress(socket);
-    _logger.Info("Received disconnect from " + address);
+    std::string user_name;
 
     std::list<Connection>::iterator i;
     for (i = _connections.begin(); i != _connections.end(); i++)
@@ -99,12 +99,15 @@ int Server::Disconnect(tcp::socket &socket)
                     break;
                 }
             }
-            _connections.pop_front();
+
+            user_name = connection.Name;
+            _connections.erase(i);
             break;
         }
     }
 
-    Broadcast(address + " has left the chat\n> ");
+    _logger.Info("Received disconnect from " + address);
+    Broadcast(user_name + " has left the chat (" + address + ")\n> ");
     return 0;
 }
 
