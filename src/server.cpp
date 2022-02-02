@@ -26,7 +26,7 @@ void Server::Start()
         tcp::socket &socket = _sockets.front();
         acceptor.accept(socket);
         _connections.push_front(Connection(&socket, "guest", GetAddress(socket)));
-        Connection connection = _connections.front();
+        Connection &connection = _connections.front();
 
         _logger.Info("Accepted connection from " + connection.Address);
         Broadcast(connection.Address + " has entered the chat\n> ");
@@ -54,9 +54,14 @@ void Server::Handle(tcp::socket &socket, Connection &connection)
         }
 
         asio::streambuf::const_buffers_type bufs = buf.data();
-        std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
+        std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
-        Broadcast(str + "> ");
+        if (message.front() == '/')
+        {
+            connection.Name = message.substr(1, message.size() - 2).substr(0, 32);
+        }
+
+        Broadcast("[" + connection.Name + "] " + message + "> ");
     }
 }
 
@@ -79,7 +84,7 @@ int Server::Disconnect(tcp::socket &socket)
     std::list<Connection>::iterator i;
     for (i = _connections.begin(); i != _connections.end(); i++)
     {
-        Connection connection = _connections.front();
+        Connection connection = *i;
         if (connection.Address == address)
         {
             std::list<tcp::socket>::iterator j;
