@@ -7,37 +7,9 @@
 #include <asio.hpp>
 
 #include "server.h"
+#include "connection.h"
 
 using asio::ip::tcp;
-
-std::string GetAddress(tcp::socket &s)
-{
-    return s.remote_endpoint().address().to_string() +
-           ":" +
-           std::to_string(s.remote_endpoint().port());
-}
-
-void Server::Handle(tcp::socket &socket)
-{
-    int connected = 1;
-
-    while (connected == 1)
-    {
-        asio::error_code ignored;
-        asio::streambuf buf;
-
-        // TODO store this stuff in a connection class
-        std::string address = GetAddress(socket);
-
-        size_t s = asio::read_until(socket, buf, "\n");
-        asio::streambuf::const_buffers_type bufs = buf.data();
-        std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
-
-        Broadcast(str);
-
-        // TODO handle client disconnect
-    }
-}
 
 void Server::Start()
 {
@@ -53,12 +25,32 @@ void Server::Start()
         _sockets.push_front(tcp::socket(service));
         tcp::socket &socket = _sockets.front();
         acceptor.accept(socket);
+        _connections.push_front(Connection(&socket, "guest"));
+        Connection connection = _connections.front();
 
-        std::string address = GetAddress(socket);
-        _logger.Info("Accepted connection from " + address);
-        Broadcast(address + " has entered the chat\n");
+        _logger.Info("Accepted connection from " + connection.Address);
+        Broadcast(connection.Address + " has entered the chat\n");
 
         _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket)));
+    }
+}
+
+void Server::Handle(tcp::socket &socket)
+{
+    int connected = 1;
+
+    while (connected == 1)
+    {
+        asio::error_code ignored;
+        asio::streambuf buf;
+
+        size_t s = asio::read_until(socket, buf, "\n");
+        asio::streambuf::const_buffers_type bufs = buf.data();
+        std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
+
+        Broadcast(str);
+
+        // TODO handle client disconnect
     }
 }
 

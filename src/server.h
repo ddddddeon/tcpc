@@ -6,6 +6,7 @@
 #include <asio.hpp>
 
 #include "logger.h"
+#include "connection.h"
 
 using asio::ip::tcp;
 
@@ -17,6 +18,7 @@ private:
     int _port;
     std::string _host;
     std::list<tcp::socket> _sockets;
+    std::list<Connection> _connections;
     std::list<std::thread> _threads;
 
     void Handle(tcp::socket &socket);
