@@ -22,6 +22,8 @@ void Server::Start()
 
     while (_running == 1)
     {
+        // TODO wrap socket in SSL
+        // https://github.com/openssl/openssl/blob/691064c47fd6a7d11189df00a0d1b94d8051cbe0/demos/ssl/serv.cpp
         _sockets.push_front(tcp::socket(service));
         tcp::socket &socket = _sockets.front();
         acceptor.accept(socket);
@@ -58,6 +60,7 @@ void Server::Handle(tcp::socket &socket, Connection &connection)
 
         if (message.front() == '/')
         {
+            // TODO authenticate name/pubkey against a leveldb database
             connection.Name = message.substr(1, message.size() - 2).substr(0, 32);
         }
 
