@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 void parse_args(int argc, char *argv[])
 {
 	int opt;
-	while ((opt = getopt(argc, argv, ":lw:i:p:")) != -1)
+	while ((opt = getopt(argc, argv, ":lai:p:")) != -1)
 	{
 		switch (opt)
 		{
