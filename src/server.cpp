@@ -49,6 +49,7 @@ void Server::Handle(tcp::socket &socket)
         std::string str(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
         Broadcast(str);
+        Stop();
 
         // TODO handle client disconnect
     }
@@ -68,11 +69,18 @@ void Server::Broadcast(std::string str)
 
 void Server::Stop()
 {
+    while (_connections.size() > 0)
+    {
+        Connection c = _connections.front();
+        _logger.Info("Terminating connection with " + c.Name + " (" + c.Address + ")");
+        _connections.pop_front();
+    }
+
     while (_sockets.size() > 0)
     {
         _sockets.front().close();
         _sockets.pop_front();
-        _logger.Info("Closing socket...");
     }
+
     _running = 0;
 }
