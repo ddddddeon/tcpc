@@ -25,7 +25,7 @@ void Server::Start()
         _sockets.push_front(tcp::socket(service));
         tcp::socket &socket = _sockets.front();
         acceptor.accept(socket);
-        _connections.push_front(Connection(&socket, "guest"));
+        _connections.push_front(Connection(socket, "guest"));
         Connection connection = _connections.front();
 
         _logger.Info("Accepted connection from " + connection.Address);
@@ -68,6 +68,11 @@ void Server::Broadcast(std::string str)
 
 void Server::Stop()
 {
-    // TODO iterate through connections and close them
+    while (_sockets.size() > 0)
+    {
+        _sockets.front().close();
+        _sockets.pop_front();
+        _logger.Info("Closing socket...");
+    }
     _running = 0;
 }

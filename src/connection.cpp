@@ -1,8 +1,8 @@
 #include "connection.h"
 
-std::string Connection::GetAddress(tcp::socket *s)
+std::string Connection::GetAddress(tcp::socket &socket)
 {
-    return s->remote_endpoint().address().to_string() +
+    return socket.remote_endpoint().address().to_string() +
            ":" +
-           std::to_string(s->remote_endpoint().port());
+           std::to_string(socket.remote_endpoint().port());
 }
