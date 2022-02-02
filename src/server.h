@@ -21,7 +21,7 @@ private:
     std::list<Connection> _connections;
     std::list<std::thread> _threads;
 
-    void Handle(tcp::socket &socket);
+    void Handle(tcp::socket &socket, Connection &connection);
     void Broadcast(std::string str);
     int Disconnect(tcp::socket &socket);
     std::string GetAddress(tcp::socket &socket);

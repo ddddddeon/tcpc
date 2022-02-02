@@ -31,11 +31,11 @@ void Server::Start()
         _logger.Info("Accepted connection from " + connection.Address);
         Broadcast(connection.Address + " has entered the chat\n> ");
 
-        _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket)));
+        _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket), std::ref(connection)));
     }
 }
 
-void Server::Handle(tcp::socket &socket)
+void Server::Handle(tcp::socket &socket, Connection &connection)
 {
     int connected = 1;
     while (connected == 1)
