@@ -7,19 +7,16 @@ using asio::ip::tcp;
 
 class Connection
 {
-private:
-    std::string GetAddress(tcp::socket &socket);
-
 public:
     std::string Name;
     std::string Address;
+    tcp::socket *Socket;
 
-    Connection(tcp::socket &socket, std::string name)
+    Connection(tcp::socket *socket, std::string name, std::string address)
     {
-
         Name = name;
-        Address = GetAddress(socket);
-        tcp::socket &Socket = socket;
+        Address = address;
+        Socket = socket;
     }
 };
 

@@ -23,6 +23,8 @@ private:
 
     void Handle(tcp::socket &socket);
     void Broadcast(std::string str);
+    int Disconnect(tcp::socket &socket);
+    std::string GetAddress(tcp::socket &socket);
 
 public:
     Server(std::string host, int port, Logger &logger)

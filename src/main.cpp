@@ -2,8 +2,6 @@
 
 #include "server.h"
 
-using namespace std;
-
 #define PORT 9000
 #define HOST "localhost"
 
@@ -27,9 +25,9 @@ int main(int argc, char *argv[])
 	{
 		server.Start();
 	}
-	catch (exception &e)
+	catch (std::exception &e)
 	{
-		cerr << e.what() << endl;
+		logger.Error(e.what());
 	}
 
 	return 0;
