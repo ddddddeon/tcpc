@@ -15,10 +15,11 @@ void Server::Start()
 {
     asio::error_code ignored;
     asio::io_service service;
-    tcp::acceptor acceptor(service, tcp::endpoint(tcp::v4(), _port));
+    asio::ip::address_v4 endpoint = asio::ip::address_v4::any();
+    tcp::acceptor acceptor(service, tcp::endpoint(endpoint, _port));
 
     _running = 1;
-    _logger.Info("Server listening on port " + std::to_string(_port));
+    _logger.Info("Server listening on " + endpoint.to_string() + ":" + std::to_string(_port));
 
     while (_running == 1)
     {

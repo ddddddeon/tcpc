@@ -7,6 +7,8 @@
 
 int main(int argc, char *argv[])
 {
+	// TODO flesh out the CLI args
+
 	Logger logger;
 
 	int port = PORT;
