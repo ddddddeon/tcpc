@@ -71,13 +71,6 @@ void Server::Broadcast(std::string str)
     }
 }
 
-std::string Server::GetAddress(tcp::socket &socket)
-{
-    return socket.remote_endpoint().address().to_string() +
-           ":" +
-           std::to_string(socket.remote_endpoint().port());
-}
-
 int Server::Disconnect(tcp::socket &socket)
 {
     std::string address = GetAddress(socket);
@@ -105,6 +98,13 @@ int Server::Disconnect(tcp::socket &socket)
 
     Broadcast(address + " has left the chat\n> ");
     return 0;
+}
+
+std::string Server::GetAddress(tcp::socket &socket)
+{
+    return socket.remote_endpoint().address().to_string() +
+           ":" +
+           std::to_string(socket.remote_endpoint().port());
 }
 
 void Server::Stop()
