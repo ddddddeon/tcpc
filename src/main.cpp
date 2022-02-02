@@ -1,27 +1,19 @@
 #include <iostream>
+#include <signal.h>
+#include <asio.hpp>
 
+#include "main.h"
 #include "server.h"
 
-#define PORT 9000
-#define HOST "localhost"
+asio::ip::address_v4 INTERFACE = asio::ip::address_v4::loopback();
+int PORT = 9000;
 
 int main(int argc, char *argv[])
 {
-	// TODO flesh out the CLI args
+	parse_args(argc, argv);
 
 	Logger logger;
-
-	int port = PORT;
-	if (argc > 1)
-	{
-		int portArg = std::atoi(argv[1]);
-		if (portArg > 0 && portArg < 65536)
-		{
-			port = portArg;
-		}
-	}
-
-	Server server(HOST, port, logger);
+	Server server(INTERFACE, PORT, logger);
 
 	try
 	{
@@ -33,4 +25,28 @@ int main(int argc, char *argv[])
 	}
 
 	return 0;
+}
+
+void parse_args(int argc, char *argv[])
+{
+	int opt;
+	while ((opt = getopt(argc, argv, ":lw:i:p:")) != -1)
+	{
+		switch (opt)
+		{
+		case 'l':
+			INTERFACE = asio::ip::address_v4::loopback();
+			break;
+		case 'a':
+			INTERFACE = asio::ip::address_v4::any();
+			break;
+		case 'i':
+			INTERFACE = asio::ip::make_address_v4(optarg);
+			break;
+		case 'p':
+			std::cout << optarg << std::endl;
+			PORT = atoi(optarg);
+			break;
+		}
+	}
 }

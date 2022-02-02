@@ -16,7 +16,7 @@ private:
     Logger _logger;
     int _running;
     int _port;
-    std::string _host;
+    asio::ip::address_v4 _interface;
     std::list<tcp::socket> _sockets;
     std::list<Connection> _connections;
     std::list<std::thread> _threads;
@@ -27,12 +27,12 @@ private:
     std::string GetAddress(tcp::socket &socket);
 
 public:
-    Server(std::string host, int port, Logger &logger)
+    Server(asio::ip::address_v4 interface, int port, Logger &logger)
     {
         _logger = logger;
         _running = 0;
         _port = port;
-        _host = host;
+        _interface = interface;
     };
 
     void Start();
