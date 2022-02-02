@@ -44,7 +44,6 @@ void parse_args(int argc, char *argv[])
 			INTERFACE = asio::ip::make_address_v4(optarg);
 			break;
 		case 'p':
-			std::cout << optarg << std::endl;
 			PORT = atoi(optarg);
 			break;
 		}
