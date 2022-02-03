@@ -1,5 +1,5 @@
 NAME=socket
-LIBS=-lpthread
+LIBS=-lpthread -lcrypto++
 CFLAGS=-g -Wall $(LIBS)
 
 CC=g++
