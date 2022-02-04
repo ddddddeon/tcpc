@@ -7,6 +7,7 @@
 
 using asio::ip::tcp;
 using std::cout;
+using std::endl;
 using std::flush;
 
 void Client::Connect()
@@ -20,6 +21,7 @@ void Client::Connect()
 
     std::thread t(&Client::ReadMessages, this, std::ref(socket));
 
+    // switch to raw mode so we can read input char by char
     system("stty raw");
 
     while (true)
@@ -29,11 +31,13 @@ void Client::Connect()
         // Ctrl-C
         if (c == 3)
         {
-            system("stty cooked");
-            cout << std::endl;
+            // exit raw mode
+            system("stty -raw");
+            cout << endl;
             exit(0);
         }
 
+        // Enter
         if (c == '\r')
         {
             // TODO calculate term width
@@ -58,13 +62,14 @@ void Client::Connect()
             }
             cout << '\r' << flush;
         }
+        // TODO implement backspace
         else
         {
             _user_input += c;
         }
     }
 
-    system("stty cooked");
+    system("stty -raw");
 }
 
 void Client::ReadMessages(tcp::socket &socket)
