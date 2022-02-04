@@ -1,16 +1,28 @@
-NAME=socket
+SERVER_NAME=server
+CLIENT_NAME=client
 LIBS=-lpthread -lcrypto++
 CFLAGS=-g -Wall $(LIBS)
 
 CC=g++
-OUTFILE=bin/$(NAME)
-INFILES=$(wildcard src/*.cpp)
+SERVER_OUTFILE=bin/$(SERVER_NAME)
+CLIENT_OUTFILE=bin/$(CLIENT_NAME)
+SERVER_INFILES=$(wildcard src/$(SERVER_NAME)/*.cpp)
+CLIENT_INFILES=$(wildcard src/$(CLIENT_NAME)/*.cpp)
+SHARED_LIBFILES=$(wildcard src/lib/*.cpp)
 
-$(NAME): 
+.PHONY: default
+
+default: $(SERVER_NAME) $(CLIENT_NAME)
+
+$(SERVER_NAME): 
 	set -e; \
-	rm src/*~ src/\#* 2>/dev/null || true; \
 	if [ ! -d bin ]; then mkdir bin; fi; \
-	$(CC) -o $(OUTFILE) $(INFILES) $(CFLAGS)
+	$(CC) -o $(SERVER_OUTFILE) $(SERVER_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
+
+$(CLIENT_NAME): 
+	set -e; \
+	if [ ! -d bin ]; then mkdir bin; fi; \
+	$(CC) -o $(CLIENT_OUTFILE) $(CLIENT_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
 
 clean:	findBin
 	@rm -rf bin;
@@ -19,16 +31,25 @@ findBin:
 	@[ -d bin ];
 
 install:
-	@mv bin/$(NAME) /usr/bin/$(NAME); \
-	chmod a+x /usr/bin/$(NAME); \
-	echo "[OK] installed to /usr/bin/$(NAME)";
+	@mv bin/$(SERVER_NAME) /usr/bin/$(SERVER_NAME); \
+	chmod a+x /usr/bin/$(SERVER_NAME); \
+	echo "[OK] installed to /usr/bin/$(SERVER_NAME)"; \
+	mv bin/$(CLIENT_NAME) /usr/bin/$(CLIENT_NAME); \
+	chmod a+x /usr/bin/$(CLIENT_NAME); \
+	echo "[OK] installed to /usr/bin/$(CLIENT_NAME)";
 
-check:
-	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./bin/$(NAME)
+check-$(SERVER_NAME):
+	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./bin/$(SERVER_NAME)
 
-trace:
-	@strace ./bin/$(NAME)
+trace-$(SERVER_NAME):
+	@strace ./bin/$(SERVER_NAME)
+
+check-$(CLIENT_NAME):
+	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./bin/$(CLIENT_NAME)
+
+trace-$(CLIENT_NAME):
+	@strace ./bin/$(CLIENT_NAME)
 	
-all: $(NAME) findBin install
+all: default findBin install
 
-rebuild: clean $(NAME) install
+rebuild: clean default install

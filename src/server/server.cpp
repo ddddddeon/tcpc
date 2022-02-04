@@ -2,8 +2,6 @@
 #include <string>
 #include <list>
 #include <thread>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <asio.hpp>
 
 #include "server.h"
@@ -31,7 +29,7 @@ void Server::Start()
         Connection &connection = _connections.front();
 
         _logger.Info("Accepted connection from " + connection.Address);
-        Broadcast(connection.Address + " has entered the chat\n> ");
+        Broadcast(connection.Name + " has entered the chat (" + connection.Address + ")\r\n");
 
         _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket), std::ref(connection)));
     }
@@ -64,7 +62,7 @@ void Server::Handle(tcp::socket &socket, Connection &connection)
             connection.Name = message.substr(1, message.size() - 2).substr(0, 32);
         }
 
-        Broadcast("[" + connection.Name + "] " + message + "> ");
+        Broadcast("[" + connection.Name + "] " + message.substr(0, message.length() - 1) + "\r\n");
     }
 }
 
@@ -107,7 +105,7 @@ int Server::Disconnect(tcp::socket &socket)
     }
 
     _logger.Info("Received disconnect from " + address);
-    Broadcast(user_name + " has left the chat (" + address + ")\n> ");
+    Broadcast(user_name + " has left the chat (" + address + ")\r\n");
     return 0;
 }
 

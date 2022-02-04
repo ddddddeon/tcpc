@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "server.h"
+#include "../lib/logger.h"
 
 asio::ip::address_v4 INTERFACE = asio::ip::address_v4::loopback();
 int PORT = 9000;
