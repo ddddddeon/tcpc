@@ -1,12 +1,18 @@
 #include <iostream>
 #include <string>
+#include <asio.hpp>
 
 #include "../lib/logger.h"
+
+using asio::ip::tcp;
 
 class Client
 {
 private:
     Logger _logger;
+    std::string _user_input;
+
+    void ReadMessages(tcp::socket &socket);
 
 public:
     std::string Host;
@@ -19,6 +25,7 @@ public:
         Port = port;
         Name = name;
         _logger = logger;
+        _user_input.reserve(65535);
     }
 
     void Connect();
