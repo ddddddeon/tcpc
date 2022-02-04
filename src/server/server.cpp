@@ -61,7 +61,6 @@ void Server::Handle(tcp::socket &socket, Connection &connection)
             // TODO authenticate name/pubkey against a leveldb database
             connection.Name = message.substr(1, message.size() - 2).substr(0, 32);
         }
-
         Broadcast("[" + connection.Name + "] " + message.substr(0, message.length() - 1) + "\r\n");
     }
 }

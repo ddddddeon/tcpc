@@ -18,10 +18,21 @@ void Client::Connect()
 
     std::thread t(&Client::ReadMessages, this, std::ref(socket));
 
+    system("stty raw");
+
     while (true)
     {
-        system("stty raw");
-        _user_input += getchar();
+        char c = getchar();
+        if (c == '\r')
+        {
+            asio::write(socket, asio::buffer(_user_input + '\n'), ignored);
+            _user_input.clear();
+            std::cout << '\r' << std::flush;
+        }
+        else
+        {
+            _user_input += c;
+        }
     }
 
     system("stty cooked");
