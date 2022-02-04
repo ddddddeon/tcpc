@@ -17,10 +17,11 @@ public:
         level = 0;
     }
 
-    void Log(std::string str);
     void Info(std::string str);
     void Warn(std::string str);
     void Error(std::string str);
+    void Name(std::string name, std::string str);
+    void Log(std::string str);
 };
 
 #endif /* !LOGGER_H */
