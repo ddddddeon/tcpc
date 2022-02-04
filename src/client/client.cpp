@@ -6,6 +6,8 @@
 #include "client.h"
 
 using asio::ip::tcp;
+using std::cout;
+using std::flush;
 
 void Client::Connect()
 {
@@ -28,7 +30,7 @@ void Client::Connect()
         if (c == 3)
         {
             system("stty cooked");
-            std::cout << std::endl;
+            cout << std::endl;
             exit(0);
         }
 
@@ -41,7 +43,7 @@ void Client::Connect()
             asio::write(socket, asio::buffer(_user_input + '\n'), ignored);
             _user_input.clear();
 
-            std::cout << '\r' << std::string(term_width, ' ');
+            cout << '\r' << std::string(term_width, ' ');
             if (input_length > term_width)
             {
                 int n_lines = input_length / term_width;
@@ -49,12 +51,12 @@ void Client::Connect()
                 for (int i = 0; i < n_lines; i++)
                 {
                     // Move up one line and delete the line
-                    std::cout << "\033[A\33[2K\r";
+                    cout << "\033[A\33[2K\r";
                 }
 
-                std::cout << std::flush;
+                cout << flush;
             }
-            std::cout << '\r' << std::flush;
+            cout << '\r' << flush;
         }
         else
         {
@@ -86,11 +88,11 @@ void Client::ReadMessages(tcp::socket &socket)
         std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
         message = message.substr(0, message.size() - 2);
 
-        std::cout << std::flush;
+        cout << flush;
 
         if (_user_input.length() != 0)
         {
-            std::cout << '\r' << std::flush;
+            cout << '\r' << flush;
         }
 
         std::string padding;
@@ -101,7 +103,7 @@ void Client::ReadMessages(tcp::socket &socket)
         }
         std::string padded_message = message + padding + "\r\n";
 
-        std::cout << padded_message << std::flush;
-        std::cout << _user_input << std::flush;
+        cout << padded_message << flush;
+        cout << _user_input << flush;
     }
 }
