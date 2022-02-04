@@ -23,6 +23,15 @@ void Client::Connect()
     while (true)
     {
         char c = getchar();
+
+        // Ctrl-C
+        if (c == 3)
+        {
+            system("stty cooked");
+            std::cout << std::endl;
+            exit(0);
+        }
+
         if (c == '\r')
         {
             asio::write(socket, asio::buffer(_user_input + '\n'), ignored);
@@ -58,6 +67,8 @@ void Client::ReadMessages(tcp::socket &socket)
         asio::streambuf::const_buffers_type bufs = buf.data();
         std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
         message = message.substr(0, message.size() - 2);
+
+        std::cout << std::flush;
 
         if (_user_input.length() != 0)
         {

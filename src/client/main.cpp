@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <getopt.h>
+#include <signal.h>
 
 #include "main.h"
 #include "client.h"
@@ -12,10 +13,9 @@ std::string NAME = "guest";
 
 int main(int argc, char *argv[])
 {
-    Logger logger;
-
     parse_args(argc, argv);
 
+    Logger logger;
     Client client(HOST, PORT, NAME, logger);
 
     try
