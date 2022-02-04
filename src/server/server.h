@@ -5,7 +5,7 @@
 #include <list>
 #include <asio.hpp>
 
-#include "logger.h"
+#include "../lib/logger.h"
 #include "connection.h"
 
 using asio::ip::tcp;

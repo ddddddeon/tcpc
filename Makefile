@@ -7,7 +7,8 @@ CC=g++
 SERVER_OUTFILE=bin/$(SERVER_NAME)
 CLIENT_OUTFILE=bin/$(CLIENT_NAME)
 SERVER_INFILES=$(wildcard src/$(SERVER_NAME)/*.cpp)
-CLIENT_INFILES=$(wildcard src/$(SERVER_NAME)/*.cpp)
+CLIENT_INFILES=$(wildcard src/$(CLIENT_NAME)/*.cpp)
+SHARED_LIBFILES=$(wildcard src/lib/*.cpp)
 
 .PHONY: default
 
@@ -16,12 +17,12 @@ default: $(SERVER_NAME) $(CLIENT_NAME)
 $(SERVER_NAME): 
 	set -e; \
 	if [ ! -d bin ]; then mkdir bin; fi; \
-	$(CC) -o $(SERVER_OUTFILE) $(SERVER_INFILES) $(CFLAGS); 
+	$(CC) -o $(SERVER_OUTFILE) $(SERVER_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
 
 $(CLIENT_NAME): 
 	set -e; \
 	if [ ! -d bin ]; then mkdir bin; fi; \
-	$(CC) -o $(CLIENT_OUTFILE) $(CLIENT_INFILES) $(CFLAGS); 
+	$(CC) -o $(CLIENT_OUTFILE) $(CLIENT_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
 
 clean:	findBin
 	@rm -rf bin;
