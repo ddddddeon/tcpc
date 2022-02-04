@@ -25,7 +25,7 @@ void Client::Connect()
     tcp::socket socket(service);
     _socket = &socket;
 
-    _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " + Name);
+    _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " + Name + '\r');
     socket.connect(tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
 
     std::thread t(&Client::ReadMessages, this, std::ref(socket));
@@ -97,7 +97,11 @@ void Client::ProcessInputChar()
     {
         int input_length = _user_input.length();
 
-        asio::write(*_socket, asio::buffer(_user_input + '\n'), _ignored);
+        if (input_length > 0)
+        {
+            asio::write(*_socket, asio::buffer(_user_input + '\n'), _ignored);
+        }
+
         _user_input.clear();
 
         cout << '\r' << std::string(_term_width, ' ');
