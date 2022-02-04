@@ -23,12 +23,6 @@ void Logger::Error(std::string str)
     Logger::Log(str);
 }
 
-void Logger::Name(std::string name, std::string str)
-{
-    std::string message = "[" + name + "]" + " " + str;
-    std::cout << message;
-}
-
 void Logger::Log(std::string str)
 {
     std::string message = "[" + levels[level] + "]" + " " + str;
