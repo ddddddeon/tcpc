@@ -12,61 +12,27 @@ using std::flush;
 
 void Client::Connect()
 {
-    asio::error_code ignored;
+    // TODO calculate term width
+    _term_width = 80;
+
+    // switch to raw mode so we can read input char by char
+    system("stty raw");
+
+    // make sure the terminal registers backspace properly
+    system("stty erase ^H");
+
     asio::io_service service;
     tcp::socket socket(service);
+    _socket = &socket;
 
     _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " + Name);
     socket.connect(tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
 
     std::thread t(&Client::ReadMessages, this, std::ref(socket));
 
-    // switch to raw mode so we can read input char by char
-    system("stty raw");
-
     while (true)
     {
-        char c = getchar();
-
-        // Ctrl-C
-        if (c == 3)
-        {
-            // exit raw mode
-            system("stty -raw");
-            cout << endl;
-            exit(0);
-        }
-
-        // Enter
-        if (c == '\r')
-        {
-            // TODO calculate term width
-            int term_width = 80;
-            int input_length = _user_input.length();
-
-            asio::write(socket, asio::buffer(_user_input + '\n'), ignored);
-            _user_input.clear();
-
-            cout << '\r' << std::string(term_width, ' ');
-            if (input_length > term_width)
-            {
-                int n_lines = input_length / term_width;
-
-                for (int i = 0; i < n_lines; i++)
-                {
-                    // Move up one line and delete the line
-                    cout << "\033[A\33[2K\r";
-                }
-
-                cout << flush;
-            }
-            cout << '\r' << flush;
-        }
-        // TODO implement backspace
-        else
-        {
-            _user_input += c;
-        }
+        ProcessInputChar();
     }
 
     system("stty -raw");
@@ -110,5 +76,57 @@ void Client::ReadMessages(tcp::socket &socket)
 
         cout << padded_message << flush;
         cout << _user_input << flush;
+    }
+}
+
+void Client::ProcessInputChar()
+{
+    char c = getchar();
+
+    // Ctrl-C
+    if (c == 3)
+    {
+        // exit raw mode
+        system("stty -raw");
+        cout << endl;
+        exit(0);
+    }
+
+    // Enter
+    if (c == '\r')
+    {
+        int input_length = _user_input.length();
+
+        asio::write(*_socket, asio::buffer(_user_input + '\n'), _ignored);
+        _user_input.clear();
+
+        cout << '\r' << std::string(_term_width, ' ');
+        if (input_length > _term_width)
+        {
+            int n_lines = input_length / _term_width;
+
+            for (int i = 0; i < n_lines; i++)
+            {
+                // Move up one line
+                cout << "\033[A\r";
+            }
+
+            cout << flush;
+        }
+        cout << '\r' << flush;
+    }
+
+    // Backspace
+    else if (c == '\b')
+    {
+        _user_input = _user_input.substr(0, _user_input.length() - 1);
+        cout << '\r' << std::string(_term_width, ' ') << flush;
+        cout << '\r' << _user_input << flush;
+    }
+
+    // Any other char
+    else
+    {
+        _user_input += c;
     }
 }

@@ -12,9 +12,13 @@ class Client
 {
 private:
     Logger _logger;
+    tcp::socket *_socket;
+    asio::error_code _ignored;
     std::string _user_input;
+    int _term_width;
 
     void ReadMessages(tcp::socket &socket);
+    void ProcessInputChar();
 
 public:
     std::string Host;
