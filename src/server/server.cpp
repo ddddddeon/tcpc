@@ -69,11 +69,12 @@ void Server::Handle(tcp::socket &socket, Connection &connection)
 void Server::Broadcast(std::string str)
 {
     asio::error_code ignored;
-    std::list<tcp::socket>::iterator i;
-    for (i = _sockets.begin(); i != _sockets.end(); i++)
+    auto i = _sockets.begin();
+    while (i != _sockets.end())
     {
         // TODO all receiving clients should prepend a newline, but not the sender
         asio::write(*i, asio::buffer(str), ignored);
+        i++;
     }
 }
 
@@ -82,26 +83,26 @@ int Server::Disconnect(tcp::socket &socket)
     std::string address = GetAddress(socket);
     std::string user_name;
 
-    std::list<Connection>::iterator i;
-    for (i = _connections.begin(); i != _connections.end(); i++)
+    auto connection = _connections.begin();
+    while (connection != _connections.end())
     {
-        Connection connection = *i;
-        if (connection.Address == address)
+        if (connection->Address == address)
         {
-            std::list<tcp::socket>::iterator j;
-            for (j = _sockets.begin(); j != _sockets.end(); j++)
+            auto socket = _sockets.begin();
+            while (socket != _sockets.end())
             {
-                if (&(*j) == connection.Socket)
+                if (&(*socket) == connection->Socket)
                 {
-                    _sockets.erase(j);
+                    _sockets.erase(socket);
                     break;
                 }
+                socket++;
             }
-
-            user_name = connection.Name;
-            _connections.erase(i);
+            user_name = connection->Name;
+            _connections.erase(connection);
             break;
         }
+        connection++;
     }
 
     _logger.Info("Received disconnect from " + address);
