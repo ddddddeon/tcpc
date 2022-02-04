@@ -6,5 +6,6 @@
 void Client::Connect()
 {
     Logger logger;
-    logger.Info("Connected to whatever!");
+
+    logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " + Name);
 }
