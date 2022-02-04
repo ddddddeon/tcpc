@@ -6,7 +6,7 @@
 #include "client.h"
 #include "../lib/logger.h"
 
-std::string HOST = "localhost";
+std::string HOST = "127.0.0.1";
 int PORT = 9000;
 std::string NAME = "guest";
 
@@ -30,13 +30,18 @@ int main(int argc, char *argv[])
 
 void parse_args(int argc, char *argv[])
 {
+    std::string localhost = "localhost";
+
     int opt;
     while ((opt = getopt(argc, argv, ":h:p:n:")) != -1)
     {
         switch (opt)
         {
         case 'h':
-            HOST = optarg;
+            if (localhost.compare(optarg) != 0)
+            {
+                HOST = optarg;
+            }
             break;
         case 'p':
             PORT = atoi(optarg);
