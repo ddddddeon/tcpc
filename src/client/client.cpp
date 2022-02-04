@@ -46,7 +46,7 @@ void Client::Connect()
             {
                 int n_lines = input_length / term_width;
 
-                for (int i = 0; i <= n_lines; i++)
+                for (int i = 0; i < n_lines; i++)
                 {
                     // Move up one line and delete the line
                     std::cout << "\033[A\33[2K\r";
