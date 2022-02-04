@@ -34,8 +34,26 @@ void Client::Connect()
 
         if (c == '\r')
         {
+            // TODO calculate term width
+            int term_width = 80;
+            int input_length = _user_input.length();
+
             asio::write(socket, asio::buffer(_user_input + '\n'), ignored);
             _user_input.clear();
+
+            std::cout << '\r' << std::string(term_width, ' ');
+            if (input_length > term_width)
+            {
+                int n_lines = input_length / term_width;
+
+                for (int i = 0; i <= n_lines; i++)
+                {
+                    // Move up one line and delete the line
+                    std::cout << "\033[A\33[2K\r";
+                }
+
+                std::cout << std::flush;
+            }
             std::cout << '\r' << std::flush;
         }
         else

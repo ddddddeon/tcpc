@@ -6,6 +6,8 @@
 
 using asio::ip::tcp;
 
+#define MAX_INPUT_BUFFER_SIZE 65535
+
 class Client
 {
 private:
@@ -25,7 +27,7 @@ public:
         Port = port;
         Name = name;
         _logger = logger;
-        _user_input.reserve(65535);
+        _user_input.reserve(MAX_INPUT_BUFFER_SIZE);
     }
 
     void Connect();
