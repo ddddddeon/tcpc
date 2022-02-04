@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "client.h"
+#include "../lib/logger.h"
 
 std::string HOST = "localhost";
 int PORT = 9000;
@@ -11,11 +12,20 @@ std::string NAME = "guest";
 
 int main(int argc, char *argv[])
 {
+    Logger logger;
+
     parse_args(argc, argv);
 
-    Client client(HOST, PORT, NAME);
+    Client client(HOST, PORT, NAME, logger);
 
-    client.Connect();
+    try
+    {
+        client.Connect();
+    }
+    catch (std::exception &e)
+    {
+        logger.Error(e.what());
+    }
 }
 
 void parse_args(int argc, char *argv[])

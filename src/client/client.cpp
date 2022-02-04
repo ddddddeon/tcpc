@@ -1,11 +1,9 @@
 #include <string>
+#include <asio.hpp>
 
 #include "client.h"
-#include "../lib/logger.h"
 
 void Client::Connect()
 {
-    Logger logger;
-
-    logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " + Name);
+    _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " + Name);
 }
