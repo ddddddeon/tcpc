@@ -3,6 +3,7 @@
 
 #include <asio.hpp>
 #include <list>
+#include <mutex>
 #include <string>
 
 #include "../lib/logger.h"
@@ -19,6 +20,9 @@ class Server {
   std::list<tcp::socket> _sockets;
   std::list<Connection> _connections;
   std::list<std::thread> _threads;
+  std::mutex _sockets_mutex;
+  std::mutex _connections_mutex;
+  std::mutex _threads_mutex;
 
   void Handle(tcp::socket &socket, Connection &connection);
   void Broadcast(std::string str);

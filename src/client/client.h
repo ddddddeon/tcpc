@@ -1,5 +1,6 @@
 #include <asio.hpp>
 #include <iostream>
+#include <mutex>
 #include <string>
 
 #include "../lib/logger.h"
@@ -14,6 +15,7 @@ class Client {
   tcp::socket *_socket;
   asio::error_code _ignored;
   std::string _user_input;
+  std::mutex _user_input_mutex;
   int _term_width;
 
   void ReadMessages(tcp::socket &socket);

@@ -117,6 +117,7 @@ void Client::ProcessInputChar() {
 
   // Any other char
   else {
+    std::unique_lock<std::mutex> lock(_user_input_mutex);
     _user_input += c;
   }
 }

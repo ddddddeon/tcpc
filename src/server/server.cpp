@@ -3,12 +3,15 @@
 #include <asio.hpp>
 #include <iostream>
 #include <list>
+#include <mutex>
 #include <string>
 #include <thread>
 
 #include "connection.h"
 
 using asio::ip::tcp;
+using std::mutex;
+using std::unique_lock;
 
 void Server::Start() {
   asio::error_code ignored;
@@ -22,18 +25,26 @@ void Server::Start() {
   while (_running == 1) {
     // TODO wrap socket in SSL
     // https://github.com/openssl/openssl/blob/691064c47fd6a7d11189df00a0d1b94d8051cbe0/demos/ssl/serv.cpp
+    unique_lock<mutex> sockets_lock(_sockets_mutex);
     _sockets.push_front(tcp::socket(service));
     tcp::socket &socket = _sockets.front();
+    sockets_lock.unlock();
+
     acceptor.accept(socket);
+
+    unique_lock<mutex> connections_lock(_connections_mutex);
     _connections.push_front(Connection(&socket, "guest", GetAddress(socket)));
     Connection &connection = _connections.front();
+    connections_lock.unlock();
 
     _logger.Info("Accepted connection from " + connection.Address);
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
 
+    unique_lock<mutex> threads_lock(_threads_mutex);
     _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket),
                                     std::ref(connection)));
+    threads_lock.unlock();
   }
 }
 
@@ -65,11 +76,13 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
 
 void Server::Broadcast(std::string str) {
   asio::error_code ignored;
+  unique_lock<mutex> sockets_lock(_sockets_mutex);
   auto socket = _sockets.begin();
   while (socket != _sockets.end()) {
     asio::write(*socket, asio::buffer(str), ignored);
     socket++;
   }
+  sockets_lock.unlock();
 }
 
 int Server::Disconnect(tcp::socket &socket) {
@@ -82,13 +95,18 @@ int Server::Disconnect(tcp::socket &socket) {
       auto socket = _sockets.begin();
       while (socket != _sockets.end()) {
         if (&(*socket) == connection->Socket) {
+          unique_lock<mutex> sockets_lock(_sockets_mutex);
           _sockets.erase(socket);
+          sockets_lock.unlock();
           break;
         }
         socket++;
       }
       user_name = connection->Name;
+      unique_lock<mutex> connections_lock(_connections_mutex);
       _connections.erase(connection);
+      connections_lock.unlock();
+
       break;
     }
     connection++;
@@ -96,6 +114,7 @@ int Server::Disconnect(tcp::socket &socket) {
 
   _logger.Info("Received disconnect from " + address);
   Broadcast(user_name + " has left the chat (" + address + ")\r\n");
+
   return 0;
 }
 
@@ -105,6 +124,9 @@ std::string Server::GetAddress(tcp::socket &socket) {
 }
 
 void Server::Stop() {
+  unique_lock<std::mutex> connections_lock(_connections_mutex);
+  unique_lock<mutex> sockets_lock(_sockets_mutex);
+
   while (_connections.size() > 0) {
     Connection c = _connections.front();
     _logger.Info("Terminating connection with " + c.Name + " (" + c.Address +
