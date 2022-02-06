@@ -1,9 +1,9 @@
 SERVER_NAME=server
 CLIENT_NAME=client
 LIBS=-lpthread -lcrypto++
-CFLAGS=-g -Wall $(LIBS)
+CFLAGS=-Wall $(LIBS)
 
-CC=g++
+CC=clang++
 SERVER_OUTFILE=bin/$(SERVER_NAME)
 CLIENT_OUTFILE=bin/$(CLIENT_NAME)
 SERVER_INFILES=$(wildcard src/$(SERVER_NAME)/*.cpp)
@@ -38,6 +38,8 @@ install:
 	chmod a+x /usr/bin/$(CLIENT_NAME); \
 	echo "[OK] installed to /usr/bin/$(CLIENT_NAME)";
 
+check: check-$(SERVER_NAME) check-$(CLIENT_NAME)
+
 check-$(SERVER_NAME):
 	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./bin/$(SERVER_NAME)
 
@@ -49,7 +51,7 @@ check-$(CLIENT_NAME):
 
 trace-$(CLIENT_NAME):
 	@strace ./bin/$(CLIENT_NAME)
-	
+
 all: default findBin install
 
 rebuild: clean default install
