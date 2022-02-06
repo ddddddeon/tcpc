@@ -1,7 +1,7 @@
 SERVER_NAME=server
 CLIENT_NAME=client
 LIBS=-lpthread -lcrypto++
-CFLAGS=-O2 -Wall -fuse-ld=lld $(LIBS)
+CFLAGS=-O2 -Wall -fuse-ld=lld $(LIBS) #-fsanitize=address -fsanitize=memory -fsanitize=thread
 
 CC=clang++
 SERVER_OUTFILE=bin/$(SERVER_NAME)
@@ -37,11 +37,12 @@ install:
 	mv bin/$(CLIENT_NAME) /usr/bin/$(CLIENT_NAME); \
 	chmod a+x /usr/bin/$(CLIENT_NAME); \
 	echo "[OK] installed to /usr/bin/$(CLIENT_NAME)";
+
 format:
 	@clang-format -i -style=google src/**/*.cpp src/**/*.h
 
 tidy:
-	@clang-tidy --checks=google-* src/**/*.cpp src/**/*.h
+	@clang-tidy --checks=google-* -header-filter=.* src/**/*.cpp src/**/*.h
 
 check: check-$(SERVER_NAME) check-$(CLIENT_NAME)
 

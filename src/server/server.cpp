@@ -67,7 +67,6 @@ void Server::Broadcast(std::string str) {
   asio::error_code ignored;
   auto socket = _sockets.begin();
   while (socket != _sockets.end()) {
-    // TODO all receiving clients should prepend a newline, but not the sender
     asio::write(*socket, asio::buffer(str), ignored);
     socket++;
   }
