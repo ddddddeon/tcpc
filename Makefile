@@ -1,7 +1,7 @@
 SERVER_NAME=server
 CLIENT_NAME=client
 LIBS=-lpthread -lcrypto++
-CFLAGS=-Wall $(LIBS)
+CFLAGS=-fuse-ld=lld -Wall $(LIBS)
 
 CC=clang++
 SERVER_OUTFILE=bin/$(SERVER_NAME)
