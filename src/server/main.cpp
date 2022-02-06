@@ -1,52 +1,47 @@
-#include <iostream>
-#include <signal.h>
-#include <asio.hpp>
-
 #include "main.h"
-#include "server.h"
+
+#include <signal.h>
+
+#include <asio.hpp>
+#include <iostream>
+
 #include "../lib/logger.h"
+#include "server.h"
 
 asio::ip::address_v4 INTERFACE = asio::ip::address_v4::loopback();
 int PORT = 9000;
 
-int main(int argc, char *argv[])
-{
-	parse_args(argc, argv);
+int main(int argc, char *argv[]) {
+  parse_args(argc, argv);
 
-	Logger logger;
-	Server server(INTERFACE, PORT, logger);
+  Logger logger;
+  Server server(INTERFACE, PORT, logger);
 
-	try
-	{
-		server.Start();
-	}
-	catch (std::exception &e)
-	{
-		logger.Error(e.what());
-	}
+  try {
+    server.Start();
+  } catch (std::exception &e) {
+    logger.Error(e.what());
+  }
 
-	return 0;
+  return 0;
 }
 
-void parse_args(int argc, char *argv[])
-{
-	int opt;
-	while ((opt = getopt(argc, argv, ":lai:p:")) != -1)
-	{
-		switch (opt)
-		{
-		case 'l':
-			INTERFACE = asio::ip::address_v4::loopback();
-			break;
-		case 'a':
-			INTERFACE = asio::ip::address_v4::any();
-			break;
-		case 'i':
-			INTERFACE = asio::ip::make_address_v4(optarg);
-			break;
-		case 'p':
-			PORT = atoi(optarg);
-			break;
-		}
-	}
+void parse_args(int argc, char *argv[]) {
+  int opt;
+  while ((opt = getopt(argc, argv, ":lai:p:")) != -1) {
+    switch (opt) {
+      case 'l':
+        INTERFACE = asio::ip::address_v4::loopback();
+        break;
+      case 'a':
+        INTERFACE = asio::ip::address_v4::any();
+        break;
+      case 'i':
+        INTERFACE = asio::ip::make_address_v4(optarg);
+        break;
+      case 'p':
+        PORT = atoi(optarg);
+        break;
+    }
+  }
 }
