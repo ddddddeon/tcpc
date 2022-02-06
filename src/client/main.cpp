@@ -23,6 +23,8 @@ int main(int argc, char *argv[]) {
     client.Connect();
   } catch (std::exception &e) {
     logger.Error(e.what());
+    std::cout << '\r' << std::flush;
+    system("stty -raw");
   }
 }
 
