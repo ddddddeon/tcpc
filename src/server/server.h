@@ -30,12 +30,8 @@ class Server {
   std::string GetAddress(tcp::socket &socket);
 
  public:
-  Server(asio::ip::address_v4 interface, int port, Logger &logger) {
-    _logger = logger;
-    _running = 0;
-    _port = port;
-    _interface = interface;
-  };
+  Server(asio::ip::address_v4 interface, int port, Logger &logger)
+      : _logger(logger), _running(0), _port(port), _interface(interface) {}
 
   void Start();
   void Stop();

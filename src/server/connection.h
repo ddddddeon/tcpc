@@ -11,11 +11,8 @@ class Connection {
   std::string Address;
   tcp::socket *Socket;
 
-  Connection(tcp::socket *socket, std::string name, std::string address) {
-    Name = name;
-    Address = address;
-    Socket = socket;
-  }
+  Connection(tcp::socket *socket, std::string name, std::string address)
+      : Name(name), Address(address), Socket(socket) {}
 };
 
 #endif /* !CONNECTION_H */
