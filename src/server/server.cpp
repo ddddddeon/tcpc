@@ -4,17 +4,20 @@
 #include <iostream>
 #include <list>
 #include <mutex>
+#include <regex>
 #include <string>
 #include <thread>
 
+#include "../lib/crypto.h"
 #include "connection.h"
 
 using asio::ip::tcp;
 using std::mutex;
 using std::unique_lock;
 
+namespace TCPChat {
+
 void Server::Start() {
-  asio::error_code ignored;
   asio::io_service service;
   tcp::acceptor acceptor(service, tcp::endpoint(_interface, _port));
 
@@ -33,7 +36,7 @@ void Server::Start() {
     acceptor.accept(socket);
 
     unique_lock<mutex> connections_lock(_connections_mutex);
-    _connections.push_front(Connection(&socket, "guest", GetAddress(socket)));
+    _connections.push_front(Connection(socket, "guest", GetAddress(socket)));
     Connection &connection = _connections.front();
     connections_lock.unlock();
 
@@ -51,7 +54,6 @@ void Server::Start() {
 void Server::Handle(tcp::socket &socket, Connection &connection) {
   int connected = 1;
   while (connected == 1) {
-    asio::error_code ignored;
     asio::streambuf buf;
 
     try {
@@ -65,12 +67,90 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
     if (message.front() == '/') {
-      // TODO authenticate name/pubkey against a leveldb database
-      connection.Name = message.substr(1, message.size() - 2).substr(0, 32);
+      message = ParseSlashCommand(message, connection);
     }
 
-    Broadcast("[" + connection.Name + "] " +
-              message.substr(0, message.length() - 1) + "\r\n");
+    if (message.length() > 0) {
+      Broadcast("[" + connection.Name + "] " +
+                message.substr(0, message.length() - 1) + "\r\n");
+    }
+  }
+}
+
+std::string Server::ParseSlashCommand(std::string message,
+                                      Connection &connection) {
+  std::smatch name_match;
+  // TODO change this to look for "/name foobar" instead of "/foobar"
+  std::regex name_regex("[A-Za-z0-9]+");
+  std::regex_search(message, name_match, name_regex);
+
+  if (name_match.length() > 0) {
+    message = SetUser(name_match.str(), message, connection);
+  }
+
+  return message;
+}
+
+std::string Server::SetUser(std::string name, std::string message,
+                            Connection &connection) {
+  std::string old_name = connection.Name;
+
+  /* TODO check here for the name against a leveldb kv store
+   * - check if the currect connection already has a pubkey set
+   * - look up the new name in db, check if it exists
+   *   - if exists in db AND a pubkey is set for this connection, check if
+   *     pubkeys match
+   *   - if exists and pubkey is not set - tell user that the name exists and
+   *     to specify a pubkey on launch to auth with that name
+   *   - if doesn't exist AND pubkey not set - generate a new pubkey and write
+   *     to db (name, pubkey_string)
+   *   - if doesn't exist AND pubkey set - write to db (name, pubkey_string)
+   */
+
+  std::smatch key_match;
+  std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
+  std::regex_search(message, key_match, key_regex);
+
+  if (key_match.length() > 0) {
+    std::string match = key_match.str();
+    std::string pubkey_string =
+        std::regex_replace(match, std::regex("\\?"), "\n");
+
+    _logger.Info("Authenticating user " + name + "...");
+    bool authenticated = Authenticate(pubkey_string, connection);
+    if (authenticated == true) {
+      _logger.Info("Successfully authenticated user " + name);
+    } else {
+      _logger.Info("Failed to authenticate user " + name);
+      // TODO alert the client that authentication failed
+      connection.Name = "guest";
+    }
+  }
+
+  // TODO only if the above specified conditions are met, set the username
+  connection.Name = name;
+
+  message.clear();
+
+  if (connection.Name.compare("guest") != 0) {
+    message = old_name + " (" + connection.Address + ") renamed to " +
+              connection.Name + "\n";
+  }
+
+  return message;
+}
+
+bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
+  Crypto crypto;
+  try {
+    RSA::PublicKey pubkey = crypto.StringToPubKey(pubkey_string);
+
+    // TODO do some kind of verification, check against a db, etc
+    connection.PubKey = pubkey;
+    return true;
+  } catch (std::exception &e) {
+    _logger.Error(e.what());
+    return false;
   }
 }
 
@@ -94,7 +174,7 @@ int Server::Disconnect(tcp::socket &socket) {
     if (connection->Address == address) {
       auto socket = _sockets.begin();
       while (socket != _sockets.end()) {
-        if (&(*socket) == connection->Socket) {
+        if (&(*socket) == &(connection->Socket)) {
           unique_lock<mutex> sockets_lock(_sockets_mutex);
           _sockets.erase(socket);
           sockets_lock.unlock();
@@ -141,3 +221,5 @@ void Server::Stop() {
 
   _running = 0;
 }
+
+}  // namespace TCPChat

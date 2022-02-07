@@ -8,8 +8,9 @@
 
 #include "../lib/logger.h"
 #include "connection.h"
-
 using asio::ip::tcp;
+
+namespace TCPChat {
 
 class Server {
  private:
@@ -25,6 +26,10 @@ class Server {
   std::mutex _threads_mutex;
 
   void Handle(tcp::socket &socket, Connection &connection);
+  std::string ParseSlashCommand(std::string message, Connection &connection);
+  std::string SetUser(std::string name, std::string message,
+                      Connection &connection);
+  bool Authenticate(std::string pubkey_string, Connection &connection);
   void Broadcast(std::string str);
   int Disconnect(tcp::socket &socket);
   std::string GetAddress(tcp::socket &socket);
@@ -36,5 +41,7 @@ class Server {
   void Start();
   void Stop();
 };
+
+}  // namespace TCPChat
 
 #endif /* !SERVER_H */

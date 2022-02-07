@@ -44,6 +44,9 @@ format:
 tidy:
 	@clang-tidy --checks=google-* -header-filter=.* src/**/*.cpp src/**/*.h
 
+lint:
+	@cpplint src/**/*.cpp src/**/*.h
+
 check: check-$(SERVER_NAME) check-$(CLIENT_NAME)
 
 check-$(SERVER_NAME):

@@ -3,13 +3,18 @@
 #include <stdio.h>
 
 #include <asio.hpp>
+#include <regex>
 #include <string>
 #include <thread>
+
+#include "../lib/crypto.h"
 
 using asio::ip::tcp;
 using std::cout;
 using std::endl;
 using std::flush;
+
+namespace TCPChat {
 
 void Client::Connect() {
   // TODO calculate term width
@@ -25,10 +30,13 @@ void Client::Connect() {
   tcp::socket socket(service);
   _socket = &socket;
 
-  _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
-               Name + '\r');
   socket.connect(
       tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
+
+  _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
+               Name + '\r');
+
+  Authenticate();
 
   std::thread t(&Client::ReadMessages, this, std::ref(socket));
 
@@ -89,7 +97,7 @@ void Client::ProcessInputChar() {
     int input_length = _user_input.length();
 
     if (input_length > 0) {
-      asio::write(*_socket, asio::buffer(_user_input + '\n'), _ignored);
+      asio::write(*_socket, asio::buffer(_user_input + '\n'));
     }
 
     _user_input.clear();
@@ -121,3 +129,23 @@ void Client::ProcessInputChar() {
     _user_input += c;
   }
 }
+
+void Client::GenerateKeyPair() {
+  Crypto crypto;
+  _privkey = crypto.GenerateKey();
+  _pubkey = RSA::PublicKey(_privkey);
+  _pubkey_string = crypto.PubKeyToString(_pubkey);
+  _pubkey_string = std::regex_replace(_pubkey_string, std::regex("\n"), "?");
+  _logger.Info("Generated Keypair in current directory!");
+}
+
+void Client::Authenticate() {
+  std::string pubkey = "";
+  if (Name.compare("guest") != 0) {
+    pubkey = _pubkey_string;
+  }
+
+  asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
+}
+
+}  // namespace TCPChat
