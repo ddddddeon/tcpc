@@ -10,7 +10,7 @@
 
 using namespace CryptoPP;
 
-void Crypto::GenerateKey() {
+RSA::PrivateKey Crypto::GenerateKey() {
   AutoSeededRandomPool rng;
   RSA::PrivateKey privkey;
   privkey.GenerateRandomWithKeySize(rng, 2048);
@@ -30,7 +30,7 @@ void Crypto::GenerateKey() {
   WriteKeyToFile(privkey, "./id_rsa");
   WriteKeyToFile(pubkey, "./id_rsa.pub");
 
-  // pubkey.DEREncode(output);
+  return privkey;
 }
 
 void Crypto::WriteKeyToFile(RSAFunction &key, char *out) {

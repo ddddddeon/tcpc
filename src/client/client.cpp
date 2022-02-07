@@ -126,5 +126,7 @@ void Client::ProcessInputChar() {
 
 void Client::GenerateKeyPair() {
   Crypto crypto;
-  crypto.GenerateKey();
+  _privkey = crypto.GenerateKey();
+  _pubkey = RSA::PublicKey(_privkey);
+  _logger.Info("Generated Keypair in current directory!");
 }
