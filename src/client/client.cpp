@@ -6,6 +6,8 @@
 #include <string>
 #include <thread>
 
+#include "../lib/crypto.h"
+
 using asio::ip::tcp;
 using std::cout;
 using std::endl;
@@ -120,4 +122,9 @@ void Client::ProcessInputChar() {
     std::unique_lock<std::mutex> lock(_user_input_mutex);
     _user_input += c;
   }
+}
+
+void Client::GenerateKeyPair() {
+  Crypto crypto;
+  crypto.GenerateKey();
 }
