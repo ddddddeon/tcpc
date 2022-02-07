@@ -25,6 +25,8 @@ class Server {
   std::mutex _threads_mutex;
 
   void Handle(tcp::socket &socket, Connection &connection);
+  std::string HandleSlashCommand(std::string message, Connection &connection);
+  bool Authenticate(std::string pubkey_string, Connection &connection);
   void Broadcast(std::string str);
   int Disconnect(tcp::socket &socket);
   std::string GetAddress(tcp::socket &socket);

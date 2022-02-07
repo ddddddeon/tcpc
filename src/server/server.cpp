@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 
+#include "../lib/crypto.h"
 #include "connection.h"
 
 using asio::ip::tcp;
@@ -66,37 +67,64 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
     if (message.front() == '/') {
-      std::smatch name_match;
-      std::regex name_regex("[A-Za-z0-9]+");
-      std::regex_search(message, name_match, name_regex);
-
-      if (name_match.length() > 0) {
-        std::string old_name = connection.Name;
-        connection.Name = name_match.str();
-
-        std::smatch key_match;
-        std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
-        std::regex_search(message, key_match, key_regex);
-
-        if (key_match.length() > 0) {
-          _logger.Info("Authenticating...");
-
-          // TODO replace ? with \n in key_match.str()
-        }
-
-        message.clear();
-
-        if (connection.Name.compare("guest") != 0) {
-          message = old_name + " (" + connection.Address + ") renamed to " +
-                    connection.Name + "\n";
-        }
-      }
+      message = HandleSlashCommand(message, connection);
     }
 
     if (message.length() > 0) {
       Broadcast("[" + connection.Name + "] " +
                 message.substr(0, message.length() - 1) + "\r\n");
     }
+  }
+}
+
+std::string Server::HandleSlashCommand(std::string message,
+                                       Connection &connection) {
+  std::smatch name_match;
+  std::regex name_regex("[A-Za-z0-9]+");
+  std::regex_search(message, name_match, name_regex);
+
+  if (name_match.length() > 0) {
+    std::string old_name = connection.Name;
+    connection.Name = name_match.str();
+
+    std::smatch key_match;
+    std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
+    std::regex_search(message, key_match, key_regex);
+
+    if (key_match.length() > 0) {
+      std::string match = key_match.str();
+      std::string pubkey_string =
+          std::regex_replace(match, std::regex("\\?"), "\n");
+
+      _logger.Info("Authenticating user " + connection.Name + "...");
+      bool authenticated = Authenticate(pubkey_string, connection);
+
+      if (authenticated == true) {
+        _logger.Info("Successfully authenticated user " + connection.Name);
+      }
+    }
+
+    message.clear();
+
+    if (connection.Name.compare("guest") != 0) {
+      message = old_name + " (" + connection.Address + ") renamed to " +
+                connection.Name + "\n";
+    }
+  }
+  return message;
+}
+
+bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
+  Crypto crypto;
+  try {
+    RSA::PublicKey pubkey = crypto.StringToPubKey(pubkey_string);
+
+    // TODO do some kind of verification, check against a db, etc
+    connection.PubKey = pubkey;
+    return true;
+  } catch (std::exception &e) {
+    _logger.Error(e.what());
+    return false;
   }
 }
 

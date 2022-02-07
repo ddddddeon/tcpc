@@ -22,6 +22,8 @@ RSA::PrivateKey Crypto::GenerateKey() {
   WriteKeyToFile(privkey, "./id_rsa");
   WriteKeyToFile(pubkey, "./id_rsa.pub");
 
+  std::cout << PubKeyToString(pubkey) << std::endl;
+
   return privkey;
 }
 
@@ -48,5 +50,14 @@ std::string Crypto::PubKeyToString(RSA::PublicKey pubkey) {
 
   encoder.CopyTo(output);
   output.MessageEnd();
+
   return pubkey_string;
+}
+
+RSA::PublicKey Crypto::StringToPubKey(std::string pubkey_string) {
+  StringSource pubkey_source(pubkey_string, true, new Base64Decoder);
+  RSA::PublicKey pubkey;
+  pubkey.Load(pubkey_source);
+
+  return pubkey;
 }

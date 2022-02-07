@@ -142,6 +142,6 @@ void Client::Authenticate() {
   if (Name.compare("guest") != 0) {
     pubkey = _pubkey_string;
   }
-  _logger.Warn("/" + Name + " " + pubkey + "\n");
+
   asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
 }
