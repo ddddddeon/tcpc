@@ -4,6 +4,7 @@
 #include <iostream>
 #include <list>
 #include <mutex>
+#include <regex>
 #include <string>
 #include <thread>
 
@@ -65,12 +66,35 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
     if (message.front() == '/') {
-      // TODO authenticate name/pubkey against a leveldb database
-      connection.Name = message.substr(1, message.size() - 2).substr(0, 32);
+      std::smatch name_match;
+      std::regex name_regex("[A-Za-z0-9]+");
+      std::regex_search(message, name_match, name_regex);
+
+      if (name_match.length() > 0) {
+        std::string old_name = connection.Name;
+        connection.Name = name_match.str();
+
+        std::smatch key_match;
+        std::regex key_regex("[A-Za-z0-9/+]+\/\/");
+        std::regex_search(message, key_match, key_regex);
+
+        if (key_match.length() > 0) {
+          _logger.Info(key_match.str());
+        }
+
+        message.clear();
+
+        if (connection.Name.compare("guest") != 0) {
+          message = old_name + " (" + connection.Address + ") renamed to " +
+                    connection.Name + "\n";
+        }
+      }
     }
 
-    Broadcast("[" + connection.Name + "] " +
-              message.substr(0, message.length() - 1) + "\r\n");
+    if (message.length() > 0) {
+      Broadcast("[" + connection.Name + "] " +
+                message.substr(0, message.length() - 1) + "\r\n");
+    }
   }
 }
 

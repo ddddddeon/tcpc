@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
   Client client(HOST, PORT, NAME, logger);
 
   try {
-    client.GenerateKeyPair();
     client.Connect();
   } catch (std::exception &e) {
     logger.Error(e.what());

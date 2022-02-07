@@ -27,10 +27,13 @@ void Client::Connect() {
   tcp::socket socket(service);
   _socket = &socket;
 
-  _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
-               Name + '\r');
   socket.connect(
       tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
+
+  _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
+               Name + '\r');
+
+  Authenticate();
 
   std::thread t(&Client::ReadMessages, this, std::ref(socket));
 
@@ -128,5 +131,14 @@ void Client::GenerateKeyPair() {
   Crypto crypto;
   _privkey = crypto.GenerateKey();
   _pubkey = RSA::PublicKey(_privkey);
+  _pubkey_string = crypto.PubKeyToString(_pubkey);
   _logger.Info("Generated Keypair in current directory!");
+}
+
+void Client::Authenticate() {
+  std::string pubkey = "";
+  if (Name.compare("guest") != 0) {
+    pubkey = _pubkey_string;
+  }
+  asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
 }

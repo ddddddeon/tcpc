@@ -16,17 +16,9 @@ RSA::PrivateKey Crypto::GenerateKey() {
   privkey.GenerateRandomWithKeySize(rng, 2048);
   privkey.SetPublicExponent(65535);
 
-  std::cout << "Generating public key..." << std::endl;
-
   RSA::PublicKey pubkey(privkey);
 
-  std::cout << "Encoding..." << std::endl;
-
-  // std::string encodedPriv, encodedPub;
-  // Base64Encoder pubKeySink(new StringSink(encodedPub));
-  // pubkey.DEREncode(pubKeySink);
-  // std::cout << encodedPub << std::endl;
-
+  // TODO handle file io errors
   WriteKeyToFile(privkey, "./id_rsa");
   WriteKeyToFile(pubkey, "./id_rsa.pub");
 
@@ -43,4 +35,18 @@ void Crypto::WriteKeyToFile(RSAFunction &key, char *out) {
 
   encoder.CopyTo(output);
   output.MessageEnd();
+}
+
+std::string Crypto::PubKeyToString(RSA::PublicKey pubkey) {
+  Base64Encoder encoder;
+  std::string pubkey_string;
+  StringSink output(pubkey_string);
+  ByteQueue queue;
+  pubkey.Save(queue);
+  queue.CopyTo(encoder);
+  encoder.MessageEnd();
+
+  encoder.CopyTo(output);
+  output.MessageEnd();
+  return pubkey_string;
 }

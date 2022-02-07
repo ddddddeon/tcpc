@@ -19,12 +19,16 @@ class Client {
   asio::error_code _ignored;
   std::string _user_input;
   std::mutex _user_input_mutex;
-  RSA::PublicKey _pubkey;
   RSA::PrivateKey _privkey;
+  RSA::PublicKey _pubkey;
+  std::string _pubkey_string;
   int _term_width;
 
   void ReadMessages(tcp::socket &socket);
   void ProcessInputChar();
+  void LoadKeyPair();
+  void GenerateKeyPair();
+  void Authenticate();
 
  public:
   std::string Host;
@@ -40,6 +44,4 @@ class Client {
   }
 
   void Connect();
-  void LoadKeyPair();
-  void GenerateKeyPair();
 };
