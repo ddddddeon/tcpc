@@ -65,7 +65,7 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
     if (message.front() == '/') {
-      message = HandleSlashCommand(message, connection);
+      message = ParseSlashCommand(message, connection);
     }
 
     if (message.length() > 0) {
@@ -75,10 +75,10 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
   }
 }
 
-std::string Server::HandleSlashCommand(std::string message,
-                                       Connection &connection) {
+std::string Server::ParseSlashCommand(std::string message,
+                                      Connection &connection) {
   std::smatch name_match;
-  // TODO change this to /name foobar instead of /foobar
+  // TODO change this to look for "/name foobar" instead of "/foobar"
   std::regex name_regex("[A-Za-z0-9]+");
   std::regex_search(message, name_match, name_regex);
 
