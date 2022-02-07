@@ -16,7 +16,6 @@ class Client {
  private:
   Logger _logger;
   tcp::socket *_socket;
-  asio::error_code _ignored;
   std::string _user_input;
   std::mutex _user_input_mutex;
   RSA::PrivateKey _privkey;

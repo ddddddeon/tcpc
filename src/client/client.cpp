@@ -95,7 +95,7 @@ void Client::ProcessInputChar() {
     int input_length = _user_input.length();
 
     if (input_length > 0) {
-      asio::write(*_socket, asio::buffer(_user_input + '\n'), _ignored);
+      asio::write(*_socket, asio::buffer(_user_input + '\n'));
     }
 
     _user_input.clear();

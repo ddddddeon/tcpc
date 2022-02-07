@@ -18,11 +18,12 @@ RSA::PrivateKey Crypto::GenerateKey() {
 
   RSA::PublicKey pubkey(privkey);
 
-  // TODO handle file io errors
-  WriteKeyToFile(privkey, "./id_rsa");
-  WriteKeyToFile(pubkey, "./id_rsa.pub");
-
-  std::cout << PubKeyToString(pubkey) << std::endl;
+  try {
+    WriteKeyToFile(privkey, "./id_rsa");
+    WriteKeyToFile(pubkey, "./id_rsa.pub");
+  } catch (std::exception &e) {
+    std::cout << e.what() << std::endl;
+  }
 
   return privkey;
 }
