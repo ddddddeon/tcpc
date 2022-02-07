@@ -9,6 +9,8 @@
 #include "../lib/logger.h"
 #include "client.h"
 
+using namespace TCPChat;
+
 std::string HOST = "127.0.0.1";
 int PORT = 9000;
 std::string NAME = "chris";

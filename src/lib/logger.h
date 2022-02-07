@@ -3,9 +3,11 @@
 
 #include <string>
 
-#define INFO 0
-#define WARN 1
-#define ERROR 2
+namespace TCPChat {
+
+const int INFO = 0;
+const int WARN = 1;
+const int ERROR = 2;
 
 class Logger {
  public:
@@ -18,5 +20,7 @@ class Logger {
   void Error(std::string str);
   void Log(std::string str);
 };
+
+}  // namespace TCPChat
 
 #endif /* !LOGGER_H */

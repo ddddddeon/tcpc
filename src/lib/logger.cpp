@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 
+namespace TCPChat {
+
 std::string const levels[3] = {"INFO", "WARN", "ERROR"};
 
 void Logger::Info(std::string str) {
@@ -29,3 +31,5 @@ void Logger::Log(std::string str) {
     std::cout << message << std::endl;
   }
 }
+
+}  // namespace TCPChat

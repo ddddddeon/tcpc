@@ -2,6 +2,8 @@
 
 #include <string>
 
+namespace TCPChat {
+
 class Crypto {
  public:
   CryptoPP::RSA::PrivateKey GenerateKey();
@@ -9,3 +11,5 @@ class Crypto {
   std::string PubKeyToString(CryptoPP::RSA::PublicKey pubkey);
   CryptoPP::RSA::PublicKey StringToPubKey(std::string pubkey_string);
 };
+
+}  // namespace TCPChat

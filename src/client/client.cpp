@@ -14,6 +14,8 @@ using std::cout;
 using std::endl;
 using std::flush;
 
+namespace TCPChat {
+
 void Client::Connect() {
   // TODO calculate term width
   _term_width = 80;
@@ -145,3 +147,5 @@ void Client::Authenticate() {
 
   asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
 }
+
+}  // namespace TCPChat

@@ -15,6 +15,8 @@ using asio::ip::tcp;
 using std::mutex;
 using std::unique_lock;
 
+namespace TCPChat {
+
 void Server::Start() {
   asio::io_service service;
   tcp::acceptor acceptor(service, tcp::endpoint(_interface, _port));
@@ -219,3 +221,5 @@ void Server::Stop() {
 
   _running = 0;
 }
+
+}  // namespace TCPChat

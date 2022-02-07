@@ -8,6 +8,8 @@
 using asio::ip::tcp;
 using CryptoPP::RSA;
 
+namespace TCPChat {
+
 class Connection {
  public:
   std::string Name;
@@ -20,5 +22,7 @@ class Connection {
 
   void SetPublicKey(std::string pubkey);
 };
+
+}  // namespace TCPChat
 
 #endif /* !CONNECTION_H */

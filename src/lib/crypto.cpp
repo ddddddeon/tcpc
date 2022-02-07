@@ -10,6 +10,8 @@
 
 using namespace CryptoPP;
 
+namespace TCPChat {
+
 RSA::PrivateKey Crypto::GenerateKey() {
   AutoSeededRandomPool rng;
   RSA::PrivateKey privkey;
@@ -62,3 +64,5 @@ RSA::PublicKey Crypto::StringToPubKey(std::string pubkey_string) {
 
   return pubkey;
 }
+
+}  // namespace TCPChat

@@ -8,8 +8,9 @@
 
 #include "../lib/logger.h"
 #include "connection.h"
-
 using asio::ip::tcp;
+
+namespace TCPChat {
 
 class Server {
  private:
@@ -40,5 +41,7 @@ class Server {
   void Start();
   void Stop();
 };
+
+}  // namespace TCPChat
 
 #endif /* !SERVER_H */

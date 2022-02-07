@@ -12,6 +12,8 @@ using CryptoPP::RSA;
 
 #define MAX_INPUT_BUFFER_SIZE 65535
 
+namespace TCPChat {
+
 class Client {
  private:
   Logger _logger;
@@ -44,3 +46,5 @@ class Client {
 
   void Connect();
 };
+
+}  // namespace TCPChat

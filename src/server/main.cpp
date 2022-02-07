@@ -8,6 +8,8 @@
 #include "../lib/logger.h"
 #include "server.h"
 
+using namespace TCPChat;
+
 asio::ip::address_v4 INTERFACE = asio::ip::address_v4::loopback();
 int PORT = 9000;
 
