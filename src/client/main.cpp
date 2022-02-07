@@ -11,7 +11,7 @@
 
 std::string HOST = "127.0.0.1";
 int PORT = 9000;
-std::string NAME = "guest";
+std::string NAME = "chris";
 
 int main(int argc, char *argv[]) {
   parse_args(argc, argv);

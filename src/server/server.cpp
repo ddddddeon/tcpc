@@ -75,11 +75,13 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
         connection.Name = name_match.str();
 
         std::smatch key_match;
-        std::regex key_regex("[A-Za-z0-9/+]+\/\/");
+        std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
         std::regex_search(message, key_match, key_regex);
 
         if (key_match.length() > 0) {
-          _logger.Info(key_match.str());
+          _logger.Info("Authenticating...");
+
+          // TODO replace ? with \n in key_match.str()
         }
 
         message.clear();

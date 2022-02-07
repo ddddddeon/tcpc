@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <asio.hpp>
+#include <regex>
 #include <string>
 #include <thread>
 
@@ -132,6 +133,7 @@ void Client::GenerateKeyPair() {
   _privkey = crypto.GenerateKey();
   _pubkey = RSA::PublicKey(_privkey);
   _pubkey_string = crypto.PubKeyToString(_pubkey);
+  _pubkey_string = std::regex_replace(_pubkey_string, std::regex("\n"), "?");
   _logger.Info("Generated Keypair in current directory!");
 }
 
@@ -140,5 +142,6 @@ void Client::Authenticate() {
   if (Name.compare("guest") != 0) {
     pubkey = _pubkey_string;
   }
+  _logger.Warn("/" + Name + " " + pubkey + "\n");
   asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
 }
