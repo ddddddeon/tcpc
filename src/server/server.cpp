@@ -34,7 +34,7 @@ void Server::Start() {
     acceptor.accept(socket);
 
     unique_lock<mutex> connections_lock(_connections_mutex);
-    _connections.push_front(Connection(&socket, "guest", GetAddress(socket)));
+    _connections.push_front(Connection(socket, "guest", GetAddress(socket)));
     Connection &connection = _connections.front();
     connections_lock.unlock();
 
@@ -114,12 +114,12 @@ std::string Server::SetUser(std::string name, std::string message,
     std::string pubkey_string =
         std::regex_replace(match, std::regex("\\?"), "\n");
 
-    _logger.Info("Authenticating user " + connection.Name + "...");
+    _logger.Info("Authenticating user " + name + "...");
     bool authenticated = Authenticate(pubkey_string, connection);
     if (authenticated == true) {
-      _logger.Info("Successfully authenticated user " + connection.Name);
+      _logger.Info("Successfully authenticated user " + name);
     } else {
-      _logger.Info("Failed to authenticate user " + connection.Name);
+      _logger.Info("Failed to authenticate user " + name);
       // TODO alert the client that authentication failed
       connection.Name = "guest";
     }
@@ -172,7 +172,7 @@ int Server::Disconnect(tcp::socket &socket) {
     if (connection->Address == address) {
       auto socket = _sockets.begin();
       while (socket != _sockets.end()) {
-        if (&(*socket) == connection->Socket) {
+        if (&(*socket) == &(connection->Socket)) {
           unique_lock<mutex> sockets_lock(_sockets_mutex);
           _sockets.erase(socket);
           sockets_lock.unlock();
