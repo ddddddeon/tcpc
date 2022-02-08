@@ -133,10 +133,11 @@ void Client::ProcessInputChar() {
 
 void Client::GenerateKeyPair() {
   Crypto crypto;
+  // TODO make sure we're not overwriting an existing keypair on disk
   _privkey = crypto.GenerateKey();
   _pubkey = RSA::PublicKey(_privkey);
   _pubkey_string = crypto.PubKeyToString(_pubkey);
-  _pubkey_string = std::regex_replace(_pubkey_string, std::regex("\n"), "?");
+  _pubkey_string = crypto.StripNewLines(_pubkey_string);
   _logger.Info("Generated Keypair in current directory!");
 }
 
@@ -146,24 +147,14 @@ bool Client::LoadKeyPair(std::string path) {
   std::string pubkey_path = privkey_path + ".pub";
 
   try {
-    CryptoPP::ByteQueue privkey_bytes;
-    CryptoPP::FileSource privkey_file(privkey_path.c_str(), true,
-                                      new CryptoPP::Base64Decoder);
-    privkey_file.TransferTo(privkey_bytes);
-    privkey_bytes.MessageEnd();
+    CryptoPP::ByteQueue privkey_bytes = crypto.LoadKeyFromFile(privkey_path);
+    CryptoPP::ByteQueue pubkey_bytes = crypto.LoadKeyFromFile(pubkey_path);
 
     _privkey.Load(privkey_bytes);
-
-    CryptoPP::ByteQueue pubkey_bytes;
-    CryptoPP::FileSource pubkey_file(pubkey_path.c_str(), true,
-                                     new CryptoPP::Base64Decoder);
-    pubkey_file.TransferTo(pubkey_bytes);
-    pubkey_bytes.MessageEnd();
-
     _pubkey.Load(pubkey_bytes);
 
     _pubkey_string = crypto.PubKeyToString(_pubkey);
-    _pubkey_string = std::regex_replace(_pubkey_string, std::regex("\n"), "?");
+    _pubkey_string = crypto.StripNewLines(_pubkey_string);
 
     return true;
   } catch (std::exception &e) {

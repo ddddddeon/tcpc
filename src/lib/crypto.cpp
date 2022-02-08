@@ -1,6 +1,7 @@
 #include "crypto.h"
 
 #include <iostream>
+#include <regex>
 
 using namespace CryptoPP;
 
@@ -36,6 +37,14 @@ void Crypto::WriteKeyToFile(RSAFunction &key, char *out) {
   output.MessageEnd();
 }
 
+CryptoPP::ByteQueue Crypto::LoadKeyFromFile(std::string path) {
+  CryptoPP::ByteQueue bytes;
+  CryptoPP::FileSource file(path.c_str(), true, new CryptoPP::Base64Decoder);
+  file.TransferTo(bytes);
+  bytes.MessageEnd();
+  return bytes;
+}
+
 std::string Crypto::PubKeyToString(RSA::PublicKey pubkey) {
   Base64Encoder encoder;
   std::string pubkey_string;
@@ -57,6 +66,14 @@ RSA::PublicKey Crypto::StringToPubKey(std::string pubkey_string) {
   pubkey.Load(pubkey_source);
 
   return pubkey;
+}
+
+std::string Crypto::StripNewLines(std::string key) {
+  return std::regex_replace(key, std::regex("\n"), "?");
+}
+
+std::string Crypto::ExpandNewLines(std::string key) {
+  return std::regex_replace(key, std::regex("\\?"), "\n");
 }
 
 }  // namespace TCPChat

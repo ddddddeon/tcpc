@@ -104,7 +104,7 @@ std::string Server::SetUser(std::string name, std::string message,
 
   if (key_match.length() > 0) {
     std::string match = key_match.str();
-    pubkey_string = std::regex_replace(match, std::regex("\\?"), "\n");
+    pubkey_string = crypto.ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
     try {
