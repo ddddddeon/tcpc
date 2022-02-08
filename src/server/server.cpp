@@ -159,8 +159,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   try {
     RSA::PublicKey pubkey = crypto.StringToPubKey(pubkey_string);
 
-    // TODO do some kind of verification-- ask the user to sign something
-    // and verify on our end?
+    // TODO do some kind of verification-- ask the user to sign something?
     connection.PubKey = pubkey;
     return true;
   } catch (std::exception &e) {

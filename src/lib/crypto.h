@@ -7,6 +7,7 @@
 
 namespace TCPChat {
 
+// TODO this probably doesn't need to be a class
 class Crypto {
  public:
   CryptoPP::RSA::PrivateKey GenerateKey();
