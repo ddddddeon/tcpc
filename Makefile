@@ -61,6 +61,9 @@ check-$(CLIENT_NAME):
 trace-$(CLIENT_NAME):
 	@strace ./bin/$(CLIENT_NAME)
 
+sloc:
+	@git ls-files | xargs wc -l
+
 all: default findBin install
 
 rebuild: clean default install
