@@ -122,13 +122,10 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
-  bool is_authenticated = false;
-
   if (db_pubkey.length() == 0) {  // no user in db, free to create
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, connection_pubkey);
     connection.Name = name;
-    is_authenticated = true;
 
   } else if (db_pubkey.length() > 0) {
     if (connection_pubkey.compare(db_pubkey) != 0) {
