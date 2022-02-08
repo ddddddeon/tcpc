@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include <leveldb/db.h>
+
 #include <asio.hpp>
 #include <iostream>
 #include <list>
@@ -9,6 +11,7 @@
 #include <thread>
 
 #include "../lib/crypto.h"
+#include "../lib/db.h"
 #include "connection.h"
 
 using asio::ip::tcp;

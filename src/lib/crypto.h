@@ -1,3 +1,6 @@
+#ifndef CRYPTO_H
+#define CRYPTO_H
+
 #include <crypto++/rsa.h>
 
 #include <string>
@@ -13,3 +16,5 @@ class Crypto {
 };
 
 }  // namespace TCPChat
+
+#endif /* !CRYPTO_H */

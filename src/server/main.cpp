@@ -5,11 +5,13 @@
 #include <asio.hpp>
 #include <iostream>
 
+#include "../lib/db.h"
 #include "../lib/logger.h"
 #include "server.h"
 
 using namespace TCPChat;
 
+std::string DB_PATH = "./db";
 asio::ip::address_v4 INTERFACE = asio::ip::address_v4::loopback();
 int PORT = 9000;
 
@@ -17,9 +19,10 @@ int main(int argc, char *argv[]) {
   parse_args(argc, argv);
 
   Logger logger;
-  Server server(INTERFACE, PORT, logger);
 
   try {
+    DB db(DB_PATH);
+    Server server(INTERFACE, PORT, logger, db);
     server.Start();
   } catch (std::exception &e) {
     logger.Error(e.what());
