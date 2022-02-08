@@ -6,6 +6,7 @@
 #include <mutex>
 #include <string>
 
+#include "../lib/db.h"
 #include "../lib/logger.h"
 #include "connection.h"
 using asio::ip::tcp;
@@ -15,6 +16,7 @@ namespace TCPChat {
 class Server {
  private:
   Logger _logger;
+  DB _db;
   int _running;
   int _port;
   asio::ip::address_v4 _interface;
@@ -35,8 +37,12 @@ class Server {
   std::string GetAddress(tcp::socket &socket);
 
  public:
-  Server(asio::ip::address_v4 interface, int port, Logger &logger)
-      : _logger(logger), _running(0), _port(port), _interface(interface) {}
+  Server(asio::ip::address_v4 interface, int port, Logger &logger, DB &db)
+      : _logger(logger),
+        _db(db),
+        _running(0),
+        _port(port),
+        _interface(interface) {}
 
   void Start();
   void Stop();

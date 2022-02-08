@@ -1,6 +1,6 @@
 SERVER_NAME=server
 CLIENT_NAME=client
-LIBS=-lpthread -lcrypto++
+LIBS=-lpthread -lcrypto++ -lleveldb
 CFLAGS=-g -Wall -fuse-ld=lld $(LIBS) #-fsanitize=address -fsanitize=memory -fsanitize=thread
 
 CC=clang++
