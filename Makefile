@@ -24,10 +24,18 @@ $(CLIENT_NAME):
 	if [ ! -d bin ]; then mkdir bin; fi; \
 	$(CC) -o $(CLIENT_OUTFILE) $(CLIENT_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
 
-clean:	findBin
+flush: flush-db flush-keys
+
+flush-db:
+	rm -rf db;
+
+flush-keys:
+	rm id_rsa*;
+
+clean:	find-bin
 	@rm -rf bin;
 
-findBin:
+find-bin:
 	@[ -d bin ];
 
 install:
@@ -64,6 +72,6 @@ trace-$(CLIENT_NAME):
 sloc:
 	@git ls-files | xargs wc -l
 
-all: default findBin install
+all: default find-bin install
 
 rebuild: clean default install
