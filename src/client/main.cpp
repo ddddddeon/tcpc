@@ -54,7 +54,6 @@ void parse_args(int argc, char *argv[]) {
   std::string localhost = "localhost";
 
   int opt;
-  // TODO allow user to set keypair location with -f
   while ((opt = getopt(argc, argv, ":h:p:n:gk:")) != -1) {
     switch (opt) {
       case 'h':

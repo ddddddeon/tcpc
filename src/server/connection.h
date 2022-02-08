@@ -19,8 +19,6 @@ class Connection {
 
   Connection(tcp::socket &socket, std::string name, std::string address)
       : Name(name), Address(address), Socket(socket) {}
-
-  void SetPublicKey(std::string pubkey);
 };
 
 }  // namespace TCPChat
