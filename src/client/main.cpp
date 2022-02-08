@@ -11,15 +11,27 @@
 
 using namespace TCPChat;
 
+bool GENERATE_KEY_PAIR = false;  // TODO parse out an arg for this
+std::string KEYPAIR_PATH = "./";
+std::string NAME = "chris";
 std::string HOST = "127.0.0.1";
 int PORT = 9000;
-std::string NAME = "chris";
 
 int main(int argc, char *argv[]) {
-  parse_args(argc, argv);
-
   Logger logger;
-  Client client(HOST, PORT, NAME, logger);
+
+  parse_args(argc, argv);
+  Client client(HOST, PORT, NAME, logger, GENERATE_KEY_PAIR);
+
+  if (!GENERATE_KEY_PAIR) {
+    logger.Info("Loading keypair from " + KEYPAIR_PATH);
+    // TODO make sure KEYPAIR_PATH ends with '/'
+    bool loaded = client.LoadKeyPair(KEYPAIR_PATH);
+    if (!loaded) {
+      logger.Error("Could not load keypair from disk - exiting");
+      exit(1);
+    }
+  }
 
   try {
     client.Connect();

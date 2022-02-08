@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <asio.hpp>
+#include <fstream>
 #include <regex>
 #include <string>
 #include <thread>
@@ -137,6 +138,38 @@ void Client::GenerateKeyPair() {
   _pubkey_string = crypto.PubKeyToString(_pubkey);
   _pubkey_string = std::regex_replace(_pubkey_string, std::regex("\n"), "?");
   _logger.Info("Generated Keypair in current directory!");
+}
+
+bool Client::LoadKeyPair(std::string path) {
+  Crypto crypto;
+  std::string privkey_path = path + "id_rsa";
+  std::string pubkey_path = privkey_path + ".pub";
+
+  try {
+    CryptoPP::ByteQueue privkey_bytes;
+    CryptoPP::FileSource privkey_file(privkey_path.c_str(), true,
+                                      new CryptoPP::Base64Decoder);
+    privkey_file.TransferTo(privkey_bytes);
+    privkey_bytes.MessageEnd();
+
+    _privkey.Load(privkey_bytes);
+
+    CryptoPP::ByteQueue pubkey_bytes;
+    CryptoPP::FileSource pubkey_file(pubkey_path.c_str(), true,
+                                     new CryptoPP::Base64Decoder);
+    pubkey_file.TransferTo(pubkey_bytes);
+    pubkey_bytes.MessageEnd();
+
+    _pubkey.Load(pubkey_bytes);
+
+    _pubkey_string = crypto.PubKeyToString(_pubkey);
+    _pubkey_string = std::regex_replace(_pubkey_string, std::regex("\n"), "?");
+
+    return true;
+  } catch (std::exception &e) {
+    _logger.Warn("Could not load keypair - " + std::string(e.what()));
+    return false;
+  }
 }
 
 void Client::Authenticate() {

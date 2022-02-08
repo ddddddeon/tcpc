@@ -99,7 +99,7 @@ std::string Server::SetUser(std::string name, std::string message,
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
   std::regex_search(message, key_match, key_regex);
-  std::string pubkey_string;
+  std::string pubkey_string = crypto.PubKeyToString(connection.PubKey);
   bool got_valid_pubkey = false;
 
   if (key_match.length() > 0) {
@@ -146,7 +146,8 @@ std::string Server::SetUser(std::string name, std::string message,
 
   message.clear();
 
-  if (connection.Name.compare("guest") != 0) {
+  if (connection.Name.compare("guest") != 0 &&
+      connection.Name.compare(old_name) != 0) {
     message = old_name + " (" + connection.Address + ") renamed to " +
               connection.Name + "\n";
   }

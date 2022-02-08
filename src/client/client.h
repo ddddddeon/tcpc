@@ -27,7 +27,6 @@ class Client {
 
   void ReadMessages(tcp::socket &socket);
   void ProcessInputChar();
-  void LoadKeyPair();
   void GenerateKeyPair();
   void Authenticate();
 
@@ -36,15 +35,18 @@ class Client {
   int Port;
   std::string Name;
 
-  Client(std::string host, int port, std::string name, Logger &logger)
+  Client(std::string host, int port, std::string name, Logger &logger,
+         bool generate_key_pair)
       : _logger(logger), Host(host), Port(port), Name(name) {
     _user_input.reserve(MAX_INPUT_BUFFER_SIZE);
 
-    // TODO check for existing keypair
-    GenerateKeyPair();
+    if (generate_key_pair) {
+      GenerateKeyPair();
+    }
   }
 
   void Connect();
+  bool LoadKeyPair(std::string path);
 };
 
 }  // namespace TCPChat

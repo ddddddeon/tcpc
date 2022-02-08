@@ -1,6 +1,9 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
 
+#include <crypto++/base64.h>
+#include <crypto++/files.h>
+#include <crypto++/osrng.h>
 #include <crypto++/rsa.h>
 
 #include <string>

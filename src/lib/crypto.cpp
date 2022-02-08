@@ -1,11 +1,5 @@
 #include "crypto.h"
 
-#include <crypto++/base64.h>
-#include <crypto++/files.h>
-#include <crypto++/hex.h>
-#include <crypto++/osrng.h>
-#include <crypto++/rsa.h>
-
 #include <iostream>
 
 using namespace CryptoPP;
