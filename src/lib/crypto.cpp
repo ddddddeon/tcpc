@@ -1,5 +1,7 @@
 #include "crypto.h"
 
+#include <string.h>
+
 #include <iostream>
 #include <regex>
 
@@ -7,7 +9,7 @@ using namespace CryptoPP;
 
 namespace TCPChat {
 
-RSA::PrivateKey Crypto::GenerateKey() {
+RSA::PrivateKey Crypto::GenerateKey(std::string path) {
   AutoSeededRandomPool rng;
   RSA::PrivateKey privkey;
   privkey.GenerateRandomWithKeySize(rng, 2048);
@@ -15,9 +17,15 @@ RSA::PrivateKey Crypto::GenerateKey() {
 
   RSA::PublicKey pubkey(privkey);
 
+  std::string privkey_out = path + "id_rsa";
+  std::string pubkey_out = path + "id_rsa.pub";
+
+  std::cout << privkey_out << std::endl;
+  std::cout << pubkey_out << std::endl;
+
   try {
-    WriteKeyToFile(privkey, "./id_rsa");
-    WriteKeyToFile(pubkey, "./id_rsa.pub");
+    WriteKeyToFile(privkey, (char *)privkey_out.c_str());
+    WriteKeyToFile(pubkey, (char *)pubkey_out.c_str());
   } catch (std::exception &e) {
     std::cout << e.what() << std::endl;
   }

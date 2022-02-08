@@ -134,11 +134,11 @@ void Client::ProcessInputChar() {
 void Client::GenerateKeyPair() {
   Crypto crypto;
   // TODO make sure we're not overwriting an existing keypair on disk
-  _privkey = crypto.GenerateKey();
+  _privkey = crypto.GenerateKey(KeyPairPath);
   _pubkey = RSA::PublicKey(_privkey);
   _pubkey_string = crypto.PubKeyToString(_pubkey);
   _pubkey_string = crypto.StripNewLines(_pubkey_string);
-  _logger.Info("Generated Keypair in current directory!");
+  _logger.Info("Generated Keypair in " + KeyPairPath);
 }
 
 bool Client::LoadKeyPair(std::string path) {

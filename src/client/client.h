@@ -34,12 +34,16 @@ class Client {
   std::string Host;
   int Port;
   std::string Name;
+  std::string KeyPairPath;
 
   Client(std::string host, int port, std::string name, Logger &logger,
-         bool generate_keypair)
-      : _logger(logger), Host(host), Port(port), Name(name) {
+         bool generate_keypair, std::string keypair_path)
+      : _logger(logger),
+        Host(host),
+        Port(port),
+        Name(name),
+        KeyPairPath(keypair_path) {
     _user_input.reserve(MAX_INPUT_BUFFER_SIZE);
-
     if (generate_keypair) {
       GenerateKeyPair();
     }

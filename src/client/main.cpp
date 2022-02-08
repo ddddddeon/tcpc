@@ -11,7 +11,7 @@
 
 using namespace TCPChat;
 
-bool GENERATE_KEYPAIR = false;  // TODO parse out an arg for this
+bool GENERATE_KEYPAIR = false;
 std::string KEYPAIR_PATH = "./";
 std::string NAME = "chris";
 std::string HOST = "127.0.0.1";
@@ -21,11 +21,17 @@ int main(int argc, char *argv[]) {
   Logger logger;
 
   parse_args(argc, argv);
-  Client client(HOST, PORT, NAME, logger, GENERATE_KEYPAIR);
+  Client client(HOST, PORT, NAME, logger, GENERATE_KEYPAIR, KEYPAIR_PATH);
 
   if (!GENERATE_KEYPAIR) {
     logger.Info("Loading keypair from " + KEYPAIR_PATH);
-    // TODO make sure KEYPAIR_PATH ends with '/'
+
+    if (KEYPAIR_PATH.back() != '/') {
+      KEYPAIR_PATH += '/';
+    }
+
+    logger.Info(KEYPAIR_PATH);
+
     bool loaded = client.LoadKeyPair(KEYPAIR_PATH);
 
     if (!loaded) {
@@ -49,7 +55,7 @@ void parse_args(int argc, char *argv[]) {
 
   int opt;
   // TODO allow user to set keypair location with -f
-  while ((opt = getopt(argc, argv, ":h:p:n:g")) != -1) {
+  while ((opt = getopt(argc, argv, ":h:p:n:gk:")) != -1) {
     switch (opt) {
       case 'h':
         if (localhost.compare(optarg) != 0) {
@@ -64,6 +70,9 @@ void parse_args(int argc, char *argv[]) {
         break;
       case 'g':
         GENERATE_KEYPAIR = true;
+        break;
+      case 'k':
+        KEYPAIR_PATH = optarg;
         break;
     }
   }
