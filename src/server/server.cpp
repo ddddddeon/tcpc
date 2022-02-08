@@ -43,6 +43,9 @@ void Server::Start() {
     connections_lock.unlock();
 
     _logger.Info("Accepted connection from " + connection.Address);
+
+    // TODO support some kind of MOTD to asio::write to the connection
+
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
 
