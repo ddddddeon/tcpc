@@ -11,7 +11,6 @@
 #include <thread>
 
 #include "../lib/crypto.h"
-#include "../lib/db.h"
 #include "connection.h"
 
 using asio::ip::tcp;
@@ -96,42 +95,54 @@ std::string Server::ParseSlashCommand(std::string message,
 
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
-  std::string old_name = connection.Name;
-
-  /* TODO check here for the name against a leveldb kv store
-   * - check if the currect connection already has a pubkey set
-   * - look up the new name in db, check if it exists
-   *   - if exists in db AND a pubkey is set for this connection, check if
-   *     pubkeys match
-   *   - if exists and pubkey is not set - tell user that the name exists and
-   *     to specify a pubkey on launch to auth with that name
-   *   - if doesn't exist AND pubkey not set - generate a new pubkey and write
-   *     to db (name, pubkey_string)
-   *   - if doesn't exist AND pubkey set - write to db (name, pubkey_string)
-   */
-
+  Crypto crypto;
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
   std::regex_search(message, key_match, key_regex);
+  std::string pubkey_string;
+  bool got_valid_pubkey = false;
 
   if (key_match.length() > 0) {
     std::string match = key_match.str();
-    std::string pubkey_string =
-        std::regex_replace(match, std::regex("\\?"), "\n");
-
-    _logger.Info("Authenticating user " + name + "...");
-    bool authenticated = Authenticate(pubkey_string, connection);
-    if (authenticated == true) {
-      _logger.Info("Successfully authenticated user " + name);
-    } else {
-      _logger.Info("Failed to authenticate user " + name);
-      // TODO alert the client that authentication failed
-      connection.Name = "guest";
+    pubkey_string = std::regex_replace(match, std::regex("\\?"), "\n");
+    _logger.Info("Got public key from " + connection.Name + "(" +
+                 connection.Address + ")");
+    try {
+      connection.PubKey = crypto.StringToPubKey(pubkey_string);
+      got_valid_pubkey = true;
+    } catch (std::exception &e) {
+      _logger.Error("Invalid public key from " + name);
     }
   }
 
-  // TODO only if the above specified conditions are met, set the username
-  connection.Name = name;
+  std::string connection_pubkey = crypto.PubKeyToString(connection.PubKey);
+  std::string old_name = connection.Name;
+  std::string db_pubkey = _db.Get(name);
+
+  bool is_authenticated = false;
+
+  if (db_pubkey.length() == 0) {  // no user in db, free to create
+    _logger.Info("No user " + name + " in the db-- creating");
+    _db.Set(name, connection_pubkey);
+    connection.Name = name;
+    is_authenticated = true;
+
+  } else if (db_pubkey.length() > 0) {
+    if (connection_pubkey.compare(db_pubkey) != 0) {
+      // TODO alert user
+      _logger.Info("Mismatched public key for " + name);
+    } else {
+      _logger.Info("Authenticating " + name + "...");
+      bool authenticated = Authenticate(pubkey_string, connection);
+      if (authenticated == true) {
+        connection.Name = name;
+        _logger.Info("Successfully authenticated " + name);
+      } else {
+        _logger.Info("Public key verification failed for " + name);
+        // TODO alert the client that authentication failed
+      }
+    }
+  }
 
   message.clear();
 
@@ -148,7 +159,8 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   try {
     RSA::PublicKey pubkey = crypto.StringToPubKey(pubkey_string);
 
-    // TODO do some kind of verification, check against a db, etc
+    // TODO do some kind of verification-- ask the user to sign something
+    // and verify on our end?
     connection.PubKey = pubkey;
     return true;
   } catch (std::exception &e) {
