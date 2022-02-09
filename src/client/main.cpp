@@ -11,29 +11,34 @@
 
 using namespace TCPChat;
 
-// TODO move into Config namespace
-bool GENERATE_KEYPAIR = false;
-std::string KEYPAIR_PATH = "./";
-std::string NAME = "chris";  // TODO add cli arg for this
-std::string HOST = "127.0.0.1";
-int PORT = 9000;
+namespace ClientConfig {
+
+bool GenerateKeyPair = false;
+std::string KeyPairPath = "./";
+std::string Name = "guest";
+std::string Host = "127.0.0.1";
+int Port = 9000;
+
+}  // namespace ClientConfig
 
 int main(int argc, char *argv[]) {
   Logger logger;
 
   parse_args(argc, argv);
-  Client client(HOST, PORT, NAME, logger, GENERATE_KEYPAIR, KEYPAIR_PATH);
+  Client client(ClientConfig::Host, ClientConfig::Port, ClientConfig::Name,
+                ClientConfig::GenerateKeyPair, ClientConfig::KeyPairPath,
+                logger);
 
-  if (!GENERATE_KEYPAIR) {
-    logger.Info("Loading keypair from " + KEYPAIR_PATH);
+  if (!ClientConfig::GenerateKeyPair) {
+    logger.Info("Loading keypair from " + ClientConfig::KeyPairPath);
 
-    if (KEYPAIR_PATH.back() != '/') {
-      KEYPAIR_PATH += '/';
+    if (ClientConfig::KeyPairPath.back() != '/') {
+      ClientConfig::KeyPairPath += '/';
     }
 
-    logger.Info(KEYPAIR_PATH);
+    logger.Info(ClientConfig::KeyPairPath);
 
-    bool loaded = client.LoadKeyPair(KEYPAIR_PATH);
+    bool loaded = client.LoadKeyPair(ClientConfig::KeyPairPath);
 
     if (!loaded) {
       logger.Error("Could not load keypair from disk - exiting");
@@ -59,20 +64,20 @@ void parse_args(int argc, char *argv[]) {
     switch (opt) {
       case 'h':
         if (localhost.compare(optarg) != 0) {
-          HOST = optarg;
+          ClientConfig::Host = optarg;
         }
         break;
       case 'p':
-        PORT = atoi(optarg);
+        ClientConfig::Port = atoi(optarg);
         break;
       case 'n':
-        NAME = optarg;
+        ClientConfig::Name = optarg;
         break;
       case 'g':
-        GENERATE_KEYPAIR = true;
+        ClientConfig::GenerateKeyPair = true;
         break;
       case 'k':
-        KEYPAIR_PATH = optarg;
+        ClientConfig::KeyPairPath = optarg;
         break;
     }
   }

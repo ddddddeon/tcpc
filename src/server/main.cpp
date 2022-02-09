@@ -11,9 +11,13 @@
 
 using namespace TCPChat;
 
-std::string DB_PATH = "./db";
-asio::ip::address_v4 INTERFACE = asio::ip::address_v4::loopback();
-int PORT = 9000;
+namespace ServerConfig {
+
+std::string DBPath = "./db";
+asio::ip::address_v4 Interface = asio::ip::address_v4::loopback();
+int Port = 9000;
+
+}  // namespace ServerConfig
 
 int main(int argc, char *argv[]) {
   parse_args(argc, argv);
@@ -21,8 +25,8 @@ int main(int argc, char *argv[]) {
   Logger logger;
 
   try {
-    DB db(DB_PATH);
-    Server server(INTERFACE, PORT, logger, db);
+    DB db(ServerConfig::DBPath);
+    Server server(ServerConfig::Interface, ServerConfig::Port, logger, db);
     server.Start();
   } catch (std::exception &e) {
     logger.Error(e.what());
@@ -36,16 +40,16 @@ void parse_args(int argc, char *argv[]) {
   while ((opt = getopt(argc, argv, ":lai:p:")) != -1) {
     switch (opt) {
       case 'l':
-        INTERFACE = asio::ip::address_v4::loopback();
+        ServerConfig::Interface = asio::ip::address_v4::loopback();
         break;
       case 'a':
-        INTERFACE = asio::ip::address_v4::any();
+        ServerConfig::Interface = asio::ip::address_v4::any();
         break;
       case 'i':
-        INTERFACE = asio::ip::make_address_v4(optarg);
+        ServerConfig::Interface = asio::ip::make_address_v4(optarg);
         break;
       case 'p':
-        PORT = atoi(optarg);
+        ServerConfig::Port = atoi(optarg);
         break;
     }
   }
