@@ -132,29 +132,27 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
-  Crypto crypto;
   // TODO make sure we're not overwriting an existing keypair on disk
-  _privkey = crypto.GenerateKey(KeyPairPath);
+  _privkey = Crypto::GenerateKey(KeyPairPath);
   _pubkey = RSA::PublicKey(_privkey);
-  _pubkey_string = crypto.PubKeyToString(_pubkey);
-  _pubkey_string = crypto.StripNewLines(_pubkey_string);
+  _pubkey_string = Crypto::PubKeyToString(_pubkey);
+  _pubkey_string = Crypto::StripNewLines(_pubkey_string);
   _logger.Info("Generated Keypair in " + KeyPairPath);
 }
 
 bool Client::LoadKeyPair(std::string path) {
-  Crypto crypto;
   std::string privkey_path = path + "id_rsa";
   std::string pubkey_path = privkey_path + ".pub";
 
   try {
-    CryptoPP::ByteQueue privkey_bytes = crypto.LoadKeyFromFile(privkey_path);
-    CryptoPP::ByteQueue pubkey_bytes = crypto.LoadKeyFromFile(pubkey_path);
+    CryptoPP::ByteQueue privkey_bytes = Crypto::LoadKeyFromFile(privkey_path);
+    CryptoPP::ByteQueue pubkey_bytes = Crypto::LoadKeyFromFile(pubkey_path);
 
     _privkey.Load(privkey_bytes);
     _pubkey.Load(pubkey_bytes);
 
-    _pubkey_string = crypto.PubKeyToString(_pubkey);
-    _pubkey_string = crypto.StripNewLines(_pubkey_string);
+    _pubkey_string = Crypto::PubKeyToString(_pubkey);
+    _pubkey_string = Crypto::StripNewLines(_pubkey_string);
 
     return true;
   } catch (std::exception &e) {

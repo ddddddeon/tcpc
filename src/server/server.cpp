@@ -98,27 +98,26 @@ std::string Server::ParseSlashCommand(std::string message,
 
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
-  Crypto crypto;
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
   std::regex_search(message, key_match, key_regex);
-  std::string pubkey_string = crypto.PubKeyToString(connection.PubKey);
+  std::string pubkey_string = Crypto::PubKeyToString(connection.PubKey);
   bool got_valid_pubkey = false;
 
   if (key_match.length() > 0) {
     std::string match = key_match.str();
-    pubkey_string = crypto.ExpandNewLines(match);
+    pubkey_string = Crypto::ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
     try {
-      connection.PubKey = crypto.StringToPubKey(pubkey_string);
+      connection.PubKey = Crypto::StringToPubKey(pubkey_string);
       got_valid_pubkey = true;
     } catch (std::exception &e) {
       _logger.Error("Invalid public key from " + name);
     }
   }
 
-  std::string connection_pubkey = crypto.PubKeyToString(connection.PubKey);
+  std::string connection_pubkey = Crypto::PubKeyToString(connection.PubKey);
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
@@ -156,9 +155,8 @@ std::string Server::SetUser(std::string name, std::string message,
 }
 
 bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
-  Crypto crypto;
   try {
-    RSA::PublicKey pubkey = crypto.StringToPubKey(pubkey_string);
+    RSA::PublicKey pubkey = Crypto::StringToPubKey(pubkey_string);
 
     // TODO do some kind of verification-- ask the user to sign something?
     connection.PubKey = pubkey;

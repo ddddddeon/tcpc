@@ -9,7 +9,9 @@ using namespace CryptoPP;
 
 namespace TCPChat {
 
-RSA::PrivateKey Crypto::GenerateKey(std::string path) {
+namespace Crypto {
+
+RSA::PrivateKey GenerateKey(std::string path) {
   AutoSeededRandomPool rng;
   RSA::PrivateKey privkey;
   privkey.GenerateRandomWithKeySize(rng, 2048);
@@ -33,7 +35,7 @@ RSA::PrivateKey Crypto::GenerateKey(std::string path) {
   return privkey;
 }
 
-void Crypto::WriteKeyToFile(RSAFunction &key, char *out) {
+void WriteKeyToFile(RSAFunction &key, char *out) {
   Base64Encoder encoder;
   FileSink output(out);
   ByteQueue queue;
@@ -45,7 +47,7 @@ void Crypto::WriteKeyToFile(RSAFunction &key, char *out) {
   output.MessageEnd();
 }
 
-CryptoPP::ByteQueue Crypto::LoadKeyFromFile(std::string path) {
+CryptoPP::ByteQueue LoadKeyFromFile(std::string path) {
   CryptoPP::ByteQueue bytes;
   CryptoPP::FileSource file(path.c_str(), true, new CryptoPP::Base64Decoder);
   file.TransferTo(bytes);
@@ -53,7 +55,7 @@ CryptoPP::ByteQueue Crypto::LoadKeyFromFile(std::string path) {
   return bytes;
 }
 
-std::string Crypto::PubKeyToString(RSA::PublicKey pubkey) {
+std::string PubKeyToString(RSA::PublicKey pubkey) {
   Base64Encoder encoder;
   std::string pubkey_string;
   StringSink output(pubkey_string);
@@ -68,7 +70,7 @@ std::string Crypto::PubKeyToString(RSA::PublicKey pubkey) {
   return pubkey_string;
 }
 
-RSA::PublicKey Crypto::StringToPubKey(std::string pubkey_string) {
+RSA::PublicKey StringToPubKey(std::string pubkey_string) {
   StringSource pubkey_source(pubkey_string, true, new Base64Decoder);
   RSA::PublicKey pubkey;
   pubkey.Load(pubkey_source);
@@ -76,12 +78,14 @@ RSA::PublicKey Crypto::StringToPubKey(std::string pubkey_string) {
   return pubkey;
 }
 
-std::string Crypto::StripNewLines(std::string key) {
+std::string StripNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\n"), "?");
 }
 
-std::string Crypto::ExpandNewLines(std::string key) {
+std::string ExpandNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\\?"), "\n");
 }
+
+}  // namespace Crypto
 
 }  // namespace TCPChat
