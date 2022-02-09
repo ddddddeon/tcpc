@@ -98,6 +98,8 @@ std::string Server::ParseSlashCommand(std::string message,
 
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
+  asio::error_code ignored;
+  std::string error = "";
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
   std::regex_search(message, key_match, key_regex);
@@ -113,7 +115,9 @@ std::string Server::SetUser(std::string name, std::string message,
       connection.PubKey = Crypto::StringToPubKey(pubkey_string);
       got_valid_pubkey = true;
     } catch (std::exception &e) {
-      _logger.Error("Invalid public key from " + name);
+      error = "*** Invalid public key from " + name;
+      Send(connection.Socket, error + "\r\n", ignored);
+      _logger.Error(error);
     }
   }
 
@@ -128,8 +132,9 @@ std::string Server::SetUser(std::string name, std::string message,
 
   } else if (db_pubkey.length() > 0) {
     if (connection_pubkey.compare(db_pubkey) != 0) {
-      // TODO alert user
-      _logger.Info("Mismatched public key for " + name);
+      error = "*** Mismatched public key for " + name;
+      _logger.Info(error);
+      Send(connection.Socket, error + "\r\n", ignored);
     } else {
       _logger.Info("Authenticating " + name + "...");
       bool authenticated = Authenticate(pubkey_string, connection);
@@ -137,8 +142,9 @@ std::string Server::SetUser(std::string name, std::string message,
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
       } else {
-        _logger.Info("Public key verification failed for " + name);
-        // TODO alert the client that authentication failed
+        error = "*** Public key verification failed for " + name;
+        _logger.Info(error);
+        Send(connection.Socket, error, ignored);
       }
     }
   }
@@ -167,12 +173,17 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   }
 }
 
-void Server::Broadcast(std::string str) {
+void Server::Send(tcp::socket &socket, std::string message,
+                  asio::error_code &code) {
+  asio::write(socket, asio::buffer(message), code);
+}
+
+void Server::Broadcast(std::string message) {
   asio::error_code ignored;
   unique_lock<mutex> sockets_lock(_sockets_mutex);
   auto socket = _sockets.begin();
   while (socket != _sockets.end()) {
-    asio::write(*socket, asio::buffer(str), ignored);
+    Send(*socket, message, ignored);
     socket++;
   }
   sockets_lock.unlock();

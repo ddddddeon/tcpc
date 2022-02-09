@@ -11,9 +11,10 @@
 
 using namespace TCPChat;
 
+// TODO move into Config namespace
 bool GENERATE_KEYPAIR = false;
 std::string KEYPAIR_PATH = "./";
-std::string NAME = "chris";
+std::string NAME = "chris";  // TODO add cli arg for this
 std::string HOST = "127.0.0.1";
 int PORT = 9000;
 

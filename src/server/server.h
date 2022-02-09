@@ -32,7 +32,8 @@ class Server {
   std::string SetUser(std::string name, std::string message,
                       Connection &connection);
   bool Authenticate(std::string pubkey_string, Connection &connection);
-  void Broadcast(std::string str);
+  void Send(tcp::socket &socket, std::string message, asio::error_code &code);
+  void Broadcast(std::string message);
   int Disconnect(tcp::socket &socket);
   std::string GetAddress(tcp::socket &socket);
 
