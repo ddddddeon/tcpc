@@ -35,9 +35,7 @@ void Client::Connect() {
   socket.connect(
       tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
 
-  if (Name.compare("guest") != 0) {
-    Authenticate();
-  }
+  Authenticate();
 
   //_logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
   //             Name + '\r');
@@ -176,12 +174,7 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  std::string pubkey = "";
-  if (Name.compare("guest") != 0) {
-    pubkey = _pubkey_string;
-  }
-
-  Socket::Send(*_socket, "/" + Name + " " + pubkey + "\n");
+  Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
   asio::streambuf verify_buf;
   std::string verify_response = Socket::ReadLine(*_socket, verify_buf);

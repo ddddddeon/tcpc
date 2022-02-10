@@ -127,17 +127,21 @@ std::string Server::SetUser(std::string name, std::string message,
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
   std::regex_search(message, key_match, key_regex);
-  std::string pubkey_string = Crypto::PubKeyToString(connection.PubKey);
-  bool got_valid_pubkey = false;
+  std::string pubkey_string = "";
+  try {
+    pubkey_string = Crypto::PubKeyToString(connection.PubKey);
+  } catch (std::exception &e) {
+    _logger.Error("foo");
+  }
 
   if (key_match.length() > 0) {
     std::string match = key_match.str();
     pubkey_string = Crypto::ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
+
     try {
       connection.PubKey = Crypto::StringToPubKey(pubkey_string);
-      got_valid_pubkey = true;
     } catch (std::exception &e) {
       error = "*** Invalid public key from " + name;
       Socket::Send(connection.Socket, error + "\r\n");
@@ -146,6 +150,7 @@ std::string Server::SetUser(std::string name, std::string message,
   }
 
   std::string connection_pubkey = Crypto::PubKeyToString(connection.PubKey);
+  _logger.Info(connection_pubkey);
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
@@ -182,6 +187,8 @@ std::string Server::SetUser(std::string name, std::string message,
           message.clear();
           message = old_name + " (" + connection.Address + ") renamed to " +
                     connection.Name + "\n";
+        } else {
+          message.clear();
         }
       } else {
         message.clear();
