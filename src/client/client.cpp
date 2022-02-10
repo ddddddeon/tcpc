@@ -32,13 +32,11 @@ void Client::Connect() {
   tcp::socket socket(service);
   _socket = &socket;
 
+  // TODO use mutex for socket
   socket.connect(
       tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
 
   Authenticate();
-
-  //_logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
-  //             Name + '\r');
 
   std::thread t(&Client::ReadMessages, this, std::ref(socket));
 

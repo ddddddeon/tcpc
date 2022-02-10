@@ -82,12 +82,9 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     std::string message = "";
 
     if (!connection.LoggedIn && connection.Name.compare("guest") == 0) {
-      // TODO move all of this into a Login() method?
-      connection.LoggedIn = true;
       // TODO connection.Authenticated = false;
+      connection.LoggedIn = true;
       Socket::Send(connection.Socket, _motd);
-      // Broadcast(connection.Name + " has entered the chat (" +
-      //           connection.Address + ")\r\n");
     }
 
     try {
@@ -174,7 +171,12 @@ std::string Server::SetUser(std::string name, std::string message,
     } else {
       _logger.Info("Authenticating " + name + "...");
       bool authenticated = Authenticate(pubkey_string, connection);
-      if (authenticated == true) {
+      if (!authenticated) {
+        message.clear();
+        error = "*** Public key verification failed for " + name;
+        _logger.Info(error);
+        Socket::Send(connection.Socket, error);
+      } else {
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
         Socket::Send(connection.Socket,
@@ -189,21 +191,14 @@ std::string Server::SetUser(std::string name, std::string message,
           message.clear();
         } else if (connection.Name.compare(old_name) != 0) {
           // TODO kick guest users around here if server is set to private
-          // TODO Broadcast("a guest has arrived...")
           message.clear();
           if (!show_entered_message) {
             message = old_name + " (" + connection.Address + ") renamed to " +
                       connection.Name + "\n";
           }
         } else {
-          // TODO DRY
           message.clear();
         }
-      } else {
-        message.clear();
-        error = "*** Public key verification failed for " + name;
-        _logger.Info(error);
-        Socket::Send(connection.Socket, error);
       }
     }
   }
