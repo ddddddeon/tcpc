@@ -140,14 +140,18 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
-  // TODO move this down?
+  // TODO don't do any of the below if user is guest
+
   if (db_pubkey.length() == 0) {  // no user in db, free to create
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, connection_pubkey);
     connection.Name = name;
     connection.LoggedIn = true;
+    message = old_name + " (" + connection.Address + ") renamed to " +
+              connection.Name + "\n";
   } else if (db_pubkey.length() > 0) {
     if (connection_pubkey.compare(db_pubkey) != 0) {
+      message.clear();
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
       Socket::Send(connection.Socket, error + "\r\n");
@@ -163,9 +167,17 @@ std::string Server::SetUser(std::string name, std::string message,
           connection.LoggedIn = true;
           Broadcast(connection.Name + " has entered the chat (" +
                     connection.Address + ")\r\n");
+          message.clear();
+        } else if (/* connection.Name.compare("guest") != 0 && */
+                   connection.Name.compare(old_name) != 0) {
+          // TODO kick guest users around here if server is set to private
+          // TODO Broadcast("a guest has arrived...")
+          message.clear();
+          message = old_name + " (" + connection.Address + ") renamed to " +
+                    connection.Name + "\n";
         }
-
       } else {
+        message.clear();
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
         Socket::Send(connection.Socket, error);
@@ -173,18 +185,8 @@ std::string Server::SetUser(std::string name, std::string message,
     }
   }
 
-  message.clear();
-
-  // TODO kick guest users around here if server is set to private
-  // TODO Broadcast("a mysterious guest has arrived...")
-  if (connection.Name.compare("guest") != 0 &&
-      connection.Name.compare(old_name) != 0) {
-    message = old_name + " (" + connection.Address + ") renamed to " +
-              connection.Name + "\n";
-  }
-
   return message;
-}
+}  // namespace TCPChat
 
 bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   try {

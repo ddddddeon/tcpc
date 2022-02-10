@@ -35,10 +35,12 @@ void Client::Connect() {
   socket.connect(
       tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
 
-  _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
-               Name + '\r');
+  if (Name.compare("guest") != 0) {
+    Authenticate();
+  }
 
-  Authenticate();
+  //_logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
+  //             Name + '\r');
 
   std::thread t(&Client::ReadMessages, this, std::ref(socket));
 
