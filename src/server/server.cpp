@@ -86,8 +86,8 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
       connection.LoggedIn = true;
       // TODO connection.Authenticated = false;
       Socket::Send(connection.Socket, _motd);
-      Broadcast(connection.Name + " has entered the chat (" +
-                connection.Address + ")\r\n");
+      // Broadcast(connection.Name + " has entered the chat (" +
+      //           connection.Address + ")\r\n");
     }
 
     try {
@@ -123,6 +123,8 @@ std::string Server::ParseSlashCommand(std::string message,
 
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
+  bool show_renamed_message = true;
+  bool show_entered_message = true;
   std::string error = "";
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
@@ -134,7 +136,9 @@ std::string Server::SetUser(std::string name, std::string message,
     _logger.Error("foo");
   }
 
-  if (key_match.length() > 0) {
+  if (key_match.length() == 0) {
+    show_entered_message = false;
+  } else {
     std::string match = key_match.str();
     pubkey_string = Crypto::ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
@@ -180,9 +184,9 @@ std::string Server::SetUser(std::string name, std::string message,
           connection.LoggedIn = true;
           Broadcast(connection.Name + " has entered the chat (" +
                     connection.Address + ")\r\n");
+          show_entered_message = false;
           message.clear();
-        } else if (/* connection.Name.compare("guest") != 0 && */
-                   connection.Name.compare(old_name) != 0) {
+        } else if (connection.Name.compare(old_name) != 0) {
           // TODO kick guest users around here if server is set to private
           // TODO Broadcast("a guest has arrived...")
           message.clear();
@@ -199,6 +203,10 @@ std::string Server::SetUser(std::string name, std::string message,
         Socket::Send(connection.Socket, error);
       }
     }
+  }
+  if (show_entered_message) {
+    Broadcast(connection.Name + " has entered the chat (" + connection.Address +
+              ")\r\n");
   }
 
   return message;
