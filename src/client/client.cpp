@@ -174,12 +174,20 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
+  asio::streambuf buf;
+  std::string motd = Socket::ReadLine(*_socket, buf);
+  _logger.Raw(motd);
 
   asio::streambuf verify_buf;
   std::string verify_response = Socket::ReadLine(*_socket, verify_buf);
+  _logger.Raw(verify_response);
 
-  if (Socket::ParseVerifyMessage(verify_response)) {
+  Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
+
+  asio::streambuf vbuf;
+  std::string vr = Socket::ReadLine(*_socket, vbuf);
+
+  if (Socket::ParseVerifyMessage(vr)) {
     Socket::Send(*_socket, "/verify foobar\n");
     asio::streambuf verified_buf;
     std::string verified_response = Socket::ReadLine(*_socket, verified_buf);

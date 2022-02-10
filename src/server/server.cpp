@@ -150,7 +150,6 @@ std::string Server::SetUser(std::string name, std::string message,
   }
 
   std::string connection_pubkey = Crypto::PubKeyToString(connection.PubKey);
-  _logger.Info(connection_pubkey);
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
@@ -173,6 +172,8 @@ std::string Server::SetUser(std::string name, std::string message,
       if (authenticated == true) {
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
+        Socket::Send(connection.Socket,
+                     "Successfully authenticated " + name + "\r\n");
 
         if (!connection.LoggedIn) {
           Socket::Send(connection.Socket, _motd);
@@ -188,6 +189,7 @@ std::string Server::SetUser(std::string name, std::string message,
           message = old_name + " (" + connection.Address + ") renamed to " +
                     connection.Name + "\n";
         } else {
+          // TODO DRY
           message.clear();
         }
       } else {
