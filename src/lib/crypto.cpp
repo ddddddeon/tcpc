@@ -84,7 +84,7 @@ std::string ExpandNewLines(std::string key) {
 }
 
 bool Verify(std::string signature, RSA::PublicKey pubkey) {
-  std::cout << signature << std::endl;
+  // TODO actually verify
   return true;
 }
 

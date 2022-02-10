@@ -12,6 +12,7 @@ namespace Socket {
 
 std::string ReadLine(tcp::socket &socket, asio::streambuf &buf);
 void Send(tcp::socket &socket, std::string message);
+bool ParseVerifyMessage(std::string &message);
 
 }  // namespace Socket
 

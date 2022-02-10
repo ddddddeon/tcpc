@@ -46,10 +46,6 @@ void Server::Start() {
 
     _logger.Info("Accepted connection from " + connection.Address);
 
-    Socket::Send(connection.Socket, _motd);
-    Broadcast(connection.Name + " has entered the chat (" + connection.Address +
-              ")\r\n");
-
     unique_lock<mutex> threads_lock(_threads_mutex);
     _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket),
                                     std::ref(connection)));
@@ -144,10 +140,12 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
+  // TODO move this down?
   if (db_pubkey.length() == 0) {  // no user in db, free to create
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, connection_pubkey);
     connection.Name = name;
+    connection.LoggedIn = true;
 
   } else if (db_pubkey.length() > 0) {
     if (connection_pubkey.compare(db_pubkey) != 0) {
@@ -160,6 +158,14 @@ std::string Server::SetUser(std::string name, std::string message,
       if (authenticated == true) {
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
+
+        if (!connection.LoggedIn) {
+          Socket::Send(connection.Socket, _motd);
+          connection.LoggedIn = true;
+          Broadcast(connection.Name + " has entered the chat (" +
+                    connection.Address + ")\r\n");
+        }
+
       } else {
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
@@ -171,7 +177,7 @@ std::string Server::SetUser(std::string name, std::string message,
   message.clear();
 
   // TODO kick guest users around here if server is set to private
-
+  // TODO Broadcast("a mysterious guest has arrived...")
   if (connection.Name.compare("guest") != 0 &&
       connection.Name.compare(old_name) != 0) {
     message = old_name + " (" + connection.Address + ") renamed to " +
@@ -192,15 +198,9 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     Socket::Send(connection.Socket, "/verify " + nonce + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket, buf);
 
-    std::smatch signature_match;
-    std::regex signature_regex("\/verify .*");
-    std::regex_search(response, signature_match, signature_regex);
+    Socket::ParseVerifyMessage(response);
 
-    if (signature_match.length() > 0) {
-      response = std::regex_replace(response, std::regex("\/verify "), "");
-      response = std::regex_replace(response, std::regex("\r"), "");
-      response = std::regex_replace(response, std::regex("\n"), "");
-    }
+    std::cout << response << std::endl;
 
     bool verified = Crypto::Verify(response, pubkey);
 
