@@ -123,7 +123,6 @@ std::string Server::ParseSlashCommand(std::string message,
 
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
-  bool show_renamed_message = true;
   bool show_entered_message = true;
   std::string error = "";
   std::smatch key_match;
@@ -162,8 +161,10 @@ std::string Server::SetUser(std::string name, std::string message,
     _db.Set(name, connection_pubkey);
     connection.Name = name;
     connection.LoggedIn = true;
-    message = old_name + " (" + connection.Address + ") renamed to " +
-              connection.Name + "\n";
+    if (!show_entered_message) {
+      message = old_name + " (" + connection.Address + ") renamed to " +
+                connection.Name + "\n";
+    }
   } else if (db_pubkey.length() > 0) {
     if (connection_pubkey.compare(db_pubkey) != 0) {
       message.clear();
@@ -190,8 +191,10 @@ std::string Server::SetUser(std::string name, std::string message,
           // TODO kick guest users around here if server is set to private
           // TODO Broadcast("a guest has arrived...")
           message.clear();
-          message = old_name + " (" + connection.Address + ") renamed to " +
-                    connection.Name + "\n";
+          if (!show_entered_message) {
+            message = old_name + " (" + connection.Address + ") renamed to " +
+                      connection.Name + "\n";
+          }
         } else {
           // TODO DRY
           message.clear();
