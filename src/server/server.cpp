@@ -146,7 +146,6 @@ std::string Server::SetUser(std::string name, std::string message,
     _db.Set(name, connection_pubkey);
     connection.Name = name;
     connection.LoggedIn = true;
-
   } else if (db_pubkey.length() > 0) {
     if (connection_pubkey.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;

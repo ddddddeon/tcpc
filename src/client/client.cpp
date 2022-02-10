@@ -173,7 +173,6 @@ bool Client::LoadKeyPair(std::string path) {
   }
 }
 
-// TODO if i specify `-n chris` this whole thing falls apart
 void Client::Authenticate() {
   std::string pubkey = "";
   if (Name.compare("guest") != 0) {
@@ -185,14 +184,12 @@ void Client::Authenticate() {
   asio::streambuf verify_buf;
   std::string verify_response = Socket::ReadLine(*_socket, verify_buf);
 
-  Socket::ParseVerifyMessage(verify_response);
-
-  Socket::Send(*_socket, "/verify foobar\n");
-
-  asio::streambuf verified_buf;
-  std::string verified_response = Socket::ReadLine(*_socket, verified_buf);
-
-  _logger.Raw(verified_response);
+  if (Socket::ParseVerifyMessage(verify_response)) {
+    Socket::Send(*_socket, "/verify foobar\n");
+    asio::streambuf verified_buf;
+    std::string verified_response = Socket::ReadLine(*_socket, verified_buf);
+    _logger.Raw(verified_response);
+  }
 }
 
 bool Client::Verify(std::string message) { return true; }
