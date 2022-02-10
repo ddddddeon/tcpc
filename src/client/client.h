@@ -29,6 +29,7 @@ class Client {
   void ProcessInputChar();
   void GenerateKeyPair();
   void Authenticate();
+  bool Verify(std::string message);
 
  public:
   std::string Host;
@@ -36,8 +37,8 @@ class Client {
   std::string Name;
   std::string KeyPairPath;
 
-  Client(std::string host, int port, std::string name,
-         bool generate_keypair, std::string keypair_path, Logger &logger)
+  Client(std::string host, int port, std::string name, bool generate_keypair,
+         std::string keypair_path, Logger &logger)
       : _logger(logger),
         Host(host),
         Port(port),

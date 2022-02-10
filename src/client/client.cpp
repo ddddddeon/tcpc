@@ -169,4 +169,6 @@ void Client::Authenticate() {
   asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
 }
 
+bool Client::Verify(std::string message) { return true; }
+
 }  // namespace TCPChat
