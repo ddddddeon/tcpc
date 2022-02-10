@@ -217,8 +217,6 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
 
     Socket::ParseVerifyMessage(response);
 
-    std::cout << response << std::endl;
-
     bool verified = Crypto::Verify(response, pubkey);
 
     if (!verified) {
