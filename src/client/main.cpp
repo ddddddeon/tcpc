@@ -30,7 +30,6 @@ int main(int argc, char *argv[]) {
     ClientConfig::KeyPairPath += '/';
   }
 
-  // TODO check if we're overwriting an existing keypair on disk
   if (!file_exists(ClientConfig::KeyPairPath + "id_rsa") &&
       !file_exists(ClientConfig::KeyPairPath + "id_rsa.pub")) {
     logger.Raw(
