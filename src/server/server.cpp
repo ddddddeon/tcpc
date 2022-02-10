@@ -81,6 +81,15 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     asio::streambuf buf;
     std::string message = "";
 
+    if (!connection.LoggedIn && connection.Name.compare("guest") == 0) {
+      // TODO move all of this into a Login() method?
+      connection.LoggedIn = true;
+      // TODO connection.Authenticated = false;
+      Socket::Send(connection.Socket, _motd);
+      Broadcast(connection.Name + " has entered the chat (" +
+                connection.Address + ")\r\n");
+    }
+
     try {
       message = Socket::ReadLine(socket, buf);
     } catch (std::exception &e) {
@@ -139,8 +148,6 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string connection_pubkey = Crypto::PubKeyToString(connection.PubKey);
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
-
-  // TODO don't do any of the below if user is guest
 
   if (db_pubkey.length() == 0) {  // no user in db, free to create
     _logger.Info("No user " + name + " in the db-- creating");
