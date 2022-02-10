@@ -83,6 +83,11 @@ std::string ExpandNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\\?"), "\n");
 }
 
+bool Verify(std::string signature, RSA::PublicKey pubkey) {
+  std::cout << signature << std::endl;
+  return true;
+}
+
 }  // namespace Crypto
 
 }  // namespace TCPChat

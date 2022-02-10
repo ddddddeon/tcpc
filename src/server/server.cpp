@@ -29,7 +29,6 @@ void Server::Start() {
                std::to_string(_port));
 
   while (_running == 1) {
-    asio::error_code ignored;
     // TODO wrap socket in SSL
     // https://github.com/openssl/openssl/blob/691064c47fd6a7d11189df00a0d1b94d8051cbe0/demos/ssl/serv.cpp
     unique_lock<mutex> sockets_lock(_sockets_mutex);
@@ -46,7 +45,7 @@ void Server::Start() {
 
     _logger.Info("Accepted connection from " + connection.Address);
 
-    Send(connection.Socket, _motd, ignored);
+    Send(connection.Socket, _motd);
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
 
@@ -83,16 +82,14 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
   int connected = 1;
   while (connected == 1) {
     asio::streambuf buf;
+    std::string message = "";
 
     try {
-      size_t s = asio::read_until(socket, buf, "\n");
+      message = ReadLine(socket, buf);
     } catch (std::exception &e) {
       connected = Disconnect(socket);
       return;
     }
-
-    asio::streambuf::const_buffers_type bufs = buf.data();
-    std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
 
     if (message.front() == '/') {
       message = ParseSlashCommand(message, connection);
@@ -120,7 +117,6 @@ std::string Server::ParseSlashCommand(std::string message,
 
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
-  asio::error_code ignored;
   std::string error = "";
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
@@ -138,7 +134,7 @@ std::string Server::SetUser(std::string name, std::string message,
       got_valid_pubkey = true;
     } catch (std::exception &e) {
       error = "*** Invalid public key from " + name;
-      Send(connection.Socket, error + "\r\n", ignored);
+      Send(connection.Socket, error + "\r\n");
       _logger.Error(error);
     }
   }
@@ -156,7 +152,7 @@ std::string Server::SetUser(std::string name, std::string message,
     if (connection_pubkey.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
-      Send(connection.Socket, error + "\r\n", ignored);
+      Send(connection.Socket, error + "\r\n");
     } else {
       _logger.Info("Authenticating " + name + "...");
       bool authenticated = Authenticate(pubkey_string, connection);
@@ -166,7 +162,7 @@ std::string Server::SetUser(std::string name, std::string message,
       } else {
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
-        Send(connection.Socket, error, ignored);
+        Send(connection.Socket, error);
       }
     }
   }
@@ -187,16 +183,45 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     RSA::PublicKey pubkey = Crypto::StringToPubKey(pubkey_string);
 
     // TODO do some kind of verification-- ask the user to sign something?
-    connection.PubKey = pubkey;
-    return true;
+    std::string nonce = "foobar";
+    asio::streambuf buf;
+
+    Send(connection.Socket, "/verify " + nonce + "\r\n");
+    std::string response = ReadLine(connection.Socket, buf);
+
+    std::smatch signature_match;
+    std::regex signature_regex("\/verify .*");
+    std::regex_search(response, signature_match, signature_regex);
+
+    if (signature_match.length() > 0) {
+      response = std::regex_replace(response, std::regex("\/verify "), "");
+      response = std::regex_replace(response, std::regex("\r"), "");
+      response = std::regex_replace(response, std::regex("\n"), "");
+    }
+
+    bool verified = Crypto::Verify(response, pubkey);
+
+    if (!verified) {
+      return false;
+    } else {
+      connection.PubKey = pubkey;
+      return true;
+    }
   } catch (std::exception &e) {
     _logger.Error(e.what());
     return false;
   }
 }
 
-void Server::Send(tcp::socket &socket, std::string message,
-                  asio::error_code &code) {
+std::string Server::ReadLine(tcp::socket &socket, asio::streambuf &buf) {
+  asio::read_until(socket, buf, "\n");
+  asio::streambuf::const_buffers_type bufs = buf.data();
+  std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
+  return message;
+}
+
+void Server::Send(tcp::socket &socket, std::string message) {
+  asio::error_code code;
   asio::write(socket, asio::buffer(message), code);
 }
 
@@ -205,7 +230,7 @@ void Server::Broadcast(std::string message) {
   unique_lock<mutex> sockets_lock(_sockets_mutex);
   auto socket = _sockets.begin();
   while (socket != _sockets.end()) {
-    Send(*socket, message, ignored);
+    Send(*socket, message);
     socket++;
   }
   sockets_lock.unlock();
