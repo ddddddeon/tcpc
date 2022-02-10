@@ -163,8 +163,9 @@ std::string Server::SetUser(std::string name, std::string message,
                 connection.Name + "\n";
     }
   } else if (db_pubkey.length() > 0) {
+    message.clear();
+
     if (connection_pubkey.compare(db_pubkey) != 0) {
-      message.clear();
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
       Socket::Send(connection.Socket, error + "\r\n");
@@ -172,7 +173,6 @@ std::string Server::SetUser(std::string name, std::string message,
       _logger.Info("Authenticating " + name + "...");
       bool authenticated = Authenticate(pubkey_string, connection);
       if (!authenticated) {
-        message.clear();
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
         Socket::Send(connection.Socket, error);
@@ -188,16 +188,13 @@ std::string Server::SetUser(std::string name, std::string message,
           Broadcast(connection.Name + " has entered the chat (" +
                     connection.Address + ")\r\n");
           show_entered_message = false;
-          message.clear();
+
         } else if (connection.Name.compare(old_name) != 0) {
           // TODO kick guest users around here if server is set to private
-          message.clear();
           if (!show_entered_message) {
             message = old_name + " (" + connection.Address + ") renamed to " +
                       connection.Name + "\n";
           }
-        } else {
-          message.clear();
         }
       }
     }
