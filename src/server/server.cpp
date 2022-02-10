@@ -11,6 +11,7 @@
 #include <thread>
 
 #include "../lib/crypto.h"
+#include "../lib/filesystem.h"
 #include "connection.h"
 
 using asio::ip::tcp;
@@ -45,19 +46,7 @@ void Server::Start() {
 
     _logger.Info("Accepted connection from " + connection.Address);
 
-    // TODO support some kind of MOTD to asio::write to the connection
-
-    std::string motd =
-        "┌──────────────────────────────────────────────────────────┐\r\n"
-        "│                                                          │\r\n"
-        "│                                                          │\r\n"
-        "│                   welcome to tcpchat !                   │\r\n"
-        "│                                                          │\r\n"
-        "│                                                          │\r\n"
-        "└──────────────────────────────────────────────────────────┘\r\n";
-
-    Send(connection.Socket, motd, ignored);
-
+    Send(connection.Socket, _motd, ignored);
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
 
@@ -66,6 +55,28 @@ void Server::Start() {
                                     std::ref(connection)));
     threads_lock.unlock();
   }
+}
+
+std::string Server::LoadMOTD(std::string path) {
+  std::string motd = Filesystem::FileToString(path);
+  if (motd.length() != 0) {
+    motd = std::regex_replace(motd, std::regex("\n"), "\r\n");
+
+    if (motd.back() != '\n') {
+      motd += "\r\n";
+    }
+  } else {
+    motd =
+        "┌──────────────────────────────────────────────────────────┐\r\n"
+        "│                                                          │\r\n"
+        "│                                                          │\r\n"
+        "│                   welcome to tcpchat !                   │\r\n"
+        "│                                                          │\r\n"
+        "│                                                          │\r\n"
+        "└──────────────────────────────────────────────────────────┘\r\n";
+  }
+
+  return motd;
 }
 
 void Server::Handle(tcp::socket &socket, Connection &connection) {

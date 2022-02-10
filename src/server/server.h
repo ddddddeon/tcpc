@@ -26,7 +26,10 @@ class Server {
   std::mutex _sockets_mutex;
   std::mutex _connections_mutex;
   std::mutex _threads_mutex;
+  std::string _motd_path;
+  std::string _motd;
 
+  std::string LoadMOTD(std::string path);
   void Handle(tcp::socket &socket, Connection &connection);
   std::string ParseSlashCommand(std::string message, Connection &connection);
   std::string SetUser(std::string name, std::string message,
@@ -38,12 +41,14 @@ class Server {
   std::string GetAddress(tcp::socket &socket);
 
  public:
-  Server(asio::ip::address_v4 interface, int port, Logger &logger, DB &db)
+  Server(asio::ip::address_v4 interface, int port, DB &db,
+         std::string motd_path, Logger &logger)
       : _logger(logger),
         _db(db),
         _running(0),
         _port(port),
-        _interface(interface) {}
+        _interface(interface),
+        _motd(LoadMOTD(motd_path)) {}
 
   void Start();
   void Stop();

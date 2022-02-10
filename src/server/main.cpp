@@ -14,6 +14,7 @@ using namespace TCPChat;
 namespace ServerConfig {
 
 std::string DBPath = "./db";
+std::string MOTDPath = "./motd";
 asio::ip::address_v4 Interface = asio::ip::address_v4::loopback();
 int Port = 9000;
 
@@ -26,7 +27,8 @@ int main(int argc, char *argv[]) {
 
   try {
     DB db(ServerConfig::DBPath);
-    Server server(ServerConfig::Interface, ServerConfig::Port, logger, db);
+    Server server(ServerConfig::Interface, ServerConfig::Port, db,
+                  ServerConfig::MOTDPath, logger);
     server.Start();
   } catch (std::exception &e) {
     logger.Error(e.what());
@@ -37,7 +39,7 @@ int main(int argc, char *argv[]) {
 
 void parse_args(int argc, char *argv[]) {
   int opt;
-  while ((opt = getopt(argc, argv, ":lai:p:")) != -1) {
+  while ((opt = getopt(argc, argv, ":lai:p:m:")) != -1) {
     switch (opt) {
       case 'l':
         ServerConfig::Interface = asio::ip::address_v4::loopback();
@@ -51,6 +53,8 @@ void parse_args(int argc, char *argv[]) {
       case 'p':
         ServerConfig::Port = atoi(optarg);
         break;
+      case 'm':
+        ServerConfig::MOTDPath = optarg;
     }
   }
 }

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 
+#include "../lib/filesystem.h"
 #include "../lib/logger.h"
 #include "client.h"
 
@@ -30,8 +31,8 @@ int main(int argc, char *argv[]) {
     ClientConfig::KeyPairPath += '/';
   }
 
-  if (!file_exists(ClientConfig::KeyPairPath + "id_rsa") &&
-      !file_exists(ClientConfig::KeyPairPath + "id_rsa.pub")) {
+  if (!Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa") &&
+      !Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa.pub")) {
     logger.Raw(
         "*** No keypair found at " + ClientConfig::KeyPairPath +
         "\nWould you like to generate a keypair at this location now?\n[y/n] ");
@@ -115,12 +116,4 @@ void parse_args(int argc, char *argv[]) {
         break;
     }
   }
-}
-
-bool file_exists(std::string path) {
-  struct stat buffer;
-  if (stat(path.c_str(), &buffer) == 0) {
-    return true;
-  }
-  return false;
 }
