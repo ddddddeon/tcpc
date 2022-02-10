@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "../lib/crypto.h"
+#include "../lib/socket.h"
 
 using asio::ip::tcp;
 using std::cout;
@@ -37,15 +38,14 @@ void Client::Connect() {
   _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
                Name + '\r');
 
-  Authenticate();
-
-  std::thread t(&Client::ReadMessages, this, std::ref(socket));
-
-  while (true) {
-    ProcessInputChar();
+  bool authenticated = Authenticate();
+  if (authenticated) {
+    std::thread t(&Client::ReadMessages, this, std::ref(socket));
+    while (true) {
+      ProcessInputChar();
+    }
+    system("stty -raw");
   }
-
-  system("stty -raw");
 }
 
 void Client::ReadMessages(tcp::socket &socket) {
@@ -160,15 +160,21 @@ bool Client::LoadKeyPair(std::string path) {
   }
 }
 
-void Client::Authenticate() {
+bool Client::Authenticate() {
   std::string pubkey = "";
   if (Name.compare("guest") != 0) {
     pubkey = _pubkey_string;
   }
 
-  asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
-}
+  Socket::Send(*_socket, "/" + Name + " " + pubkey + "\n");
 
-bool Client::Verify(std::string message) { return true; }
+  std::string response = Socket::ReadLine(*_socket);
+  if (response.length() == 0) {
+    return false;
+  }
+  response = Socket::ParseVerifyMessage(response);
+
+  _logger.Info("Received nonce " + response + '\r');
+}
 
 }  // namespace TCPChat

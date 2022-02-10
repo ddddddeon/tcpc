@@ -10,8 +10,9 @@ namespace TCPChat {
 
 namespace Socket {
 
-std::string ReadLine(tcp::socket &socket, asio::streambuf &buf);
-void Send(tcp::socket &socket, std::string message);
+std::string ReadLine(tcp::socket &socket);
+bool Send(tcp::socket &socket, std::string message);
+std::string ParseVerifyMessage(std::string message);
 
 }  // namespace Socket
 

@@ -28,7 +28,7 @@ class Client {
   void ReadMessages(tcp::socket &socket);
   void ProcessInputChar();
   void GenerateKeyPair();
-  void Authenticate();
+  bool Authenticate();
   bool Verify(std::string message);
 
  public:
@@ -40,6 +40,7 @@ class Client {
   Client(std::string host, int port, std::string name, bool generate_keypair,
          std::string keypair_path, Logger &logger)
       : _logger(logger),
+        _socket(nullptr),
         Host(host),
         Port(port),
         Name(name),

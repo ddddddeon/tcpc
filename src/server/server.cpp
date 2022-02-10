@@ -46,7 +46,6 @@ void Server::Start() {
 
     _logger.Info("Accepted connection from " + connection.Address);
 
-    Socket::Send(connection.Socket, _motd);
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
 
@@ -80,20 +79,22 @@ std::string Server::LoadMOTD(std::string path) {
 }
 
 void Server::Handle(tcp::socket &socket, Connection &connection) {
-  int connected = 1;
-  while (connected == 1) {
-    asio::streambuf buf;
+  bool connected = true;
+  while (connected) {
     std::string message = "";
 
-    try {
-      message = Socket::ReadLine(socket, buf);
-    } catch (std::exception &e) {
-      connected = Disconnect(socket);
-      return;
-    }
+    message = Socket::ReadLine(socket);
+    // if (message.length() == 0) {
+    //   connected = Disconnect(socket);
+    //   return;
+    // }
 
     if (message.front() == '/') {
       message = ParseSlashCommand(message, connection);
+      if (message.length() == 0) {
+        connected = Disconnect(socket);
+        return;
+      }
     }
 
     if (message.length() > 0) {
@@ -143,6 +144,7 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string connection_pubkey = Crypto::PubKeyToString(connection.PubKey);
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
+  bool sent = true;
 
   if (db_pubkey.length() == 0) {  // no user in db, free to create
     _logger.Info("No user " + name + " in the db-- creating");
@@ -153,22 +155,27 @@ std::string Server::SetUser(std::string name, std::string message,
     if (connection_pubkey.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
-      Socket::Send(connection.Socket, error + "\r\n");
+      sent = Socket::Send(connection.Socket, error + "\r\n");
     } else {
       _logger.Info("Authenticating " + name + "...");
       bool authenticated = Authenticate(pubkey_string, connection);
       if (authenticated == true) {
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
+        sent = Socket::Send(connection.Socket, _motd);
       } else {
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
-        Socket::Send(connection.Socket, error);
+        sent = Socket::Send(connection.Socket, error);
       }
     }
   }
 
   message.clear();
+
+  if (!sent) {
+    return message;
+  }
 
   // TODO kick guest users around here if server is set to private
 
@@ -187,20 +194,16 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
 
     // TODO do some kind of verification-- ask the user to sign something?
     std::string nonce = "foobar";
-    asio::streambuf buf;
 
     Socket::Send(connection.Socket, "/verify " + nonce + "\r\n");
-    std::string response = Socket::ReadLine(connection.Socket, buf);
 
-    std::smatch signature_match;
-    std::regex signature_regex("\/verify .*");
-    std::regex_search(response, signature_match, signature_regex);
+    std::string response = Socket::ReadLine(connection.Socket);
+    // if (response.length() == 0) {
+    //   // connection.Connected = Disconnect(connection.Socket);
+    //   return false;
+    // }
 
-    if (signature_match.length() > 0) {
-      response = std::regex_replace(response, std::regex("\/verify "), "");
-      response = std::regex_replace(response, std::regex("\r"), "");
-      response = std::regex_replace(response, std::regex("\n"), "");
-    }
+    response = Socket::ParseVerifyMessage(response);
 
     bool verified = Crypto::Verify(response, pubkey);
 

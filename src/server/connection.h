@@ -16,9 +16,10 @@ class Connection {
   std::string Address;
   tcp::socket &Socket;
   RSA::PublicKey PubKey;
+  bool Connected;
 
   Connection(tcp::socket &socket, std::string name, std::string address)
-      : Name(name), Address(address), Socket(socket) {}
+      : Name(name), Address(address), Socket(socket), Connected(true) {}
 };
 
 }  // namespace TCPChat
