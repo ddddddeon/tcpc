@@ -2,6 +2,7 @@
 
 #include <getopt.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 #include <iostream>
 #include <string>
@@ -23,29 +24,63 @@ int Port = 9000;
 
 int main(int argc, char *argv[]) {
   Logger logger;
-
   parse_args(argc, argv);
+
+  if (ClientConfig::KeyPairPath.back() != '/') {
+    ClientConfig::KeyPairPath += '/';
+  }
+
+  // TODO check if we're overwriting an existing keypair on disk
+  if (!file_exists(ClientConfig::KeyPairPath + "id_rsa") &&
+      !file_exists(ClientConfig::KeyPairPath + "id_rsa.pub")) {
+    logger.Raw(
+        "*** No keypair found at " + ClientConfig::KeyPairPath +
+        "\nWould you like to generate a keypair at this location now?\n[y/n] ");
+    std::string yn = "";
+    std::cin >> yn;
+
+    if (yn.front() == 'y' || yn.front() == 'Y') {
+      ClientConfig::GenerateKeyPair = true;
+    } else {
+      logger.Line(
+          "*** Please specify a filepath where the files `id_rsa` and "
+          "`id_rsa.pub` can be\n"
+          "found, using the -k flag.\n"
+          "Or, run this program with the -g flag to generate a new keypair,"
+          " in a directory\n"
+          "specified by the -k flag (default is " +
+          ClientConfig::KeyPairPath + ")");
+      exit(1);
+    }
+  } else if (ClientConfig::GenerateKeyPair) {
+    logger.Line(
+        "*** Keypair files exist already at " + ClientConfig::KeyPairPath +
+        "\nOverwriting these files would mean you will no longer be "
+        "able to authenticate\n"
+        "with ANY usernames you've used in the past. I'm afraid I can't "
+        "let you do that.\n\n"
+        "*** If you truly want to delete your keypair, "
+        "delete them yourself from the\n"
+        "filesystem and re-run this program with the -g flag "
+        "or specify a different\n"
+        "directory with the -k flag.");
+    exit(1);
+  }
+
   Client client(ClientConfig::Host, ClientConfig::Port, ClientConfig::Name,
                 ClientConfig::GenerateKeyPair, ClientConfig::KeyPairPath,
                 logger);
 
   if (!ClientConfig::GenerateKeyPair) {
     logger.Info("Loading keypair from " + ClientConfig::KeyPairPath);
-
-    if (ClientConfig::KeyPairPath.back() != '/') {
-      ClientConfig::KeyPairPath += '/';
-    }
-
-    logger.Info(ClientConfig::KeyPairPath);
-
     bool loaded = client.LoadKeyPair(ClientConfig::KeyPairPath);
 
     if (!loaded) {
-      logger.Error("Could not load keypair from disk - exiting");
+      logger.Error(
+          "*** Could not load keypair from disk! Check file permissions?");
       exit(1);
     }
   }
-  // TODO check if we're overwriting an existing keypair on disk
 
   try {
     client.Connect();
@@ -81,4 +116,12 @@ void parse_args(int argc, char *argv[]) {
         break;
     }
   }
+}
+
+bool file_exists(std::string path) {
+  struct stat buffer;
+  if (stat(path.c_str(), &buffer) == 0) {
+    return true;
+  }
+  return false;
 }

@@ -18,7 +18,7 @@ void DB::Initialize(std::string path) {
   leveldb::Status status = leveldb::DB::Open(options, path, &db);
   if (!status.ok()) {
     logger.Error("Could not initialize db at path " + path);
-    exit(0);
+    exit(1);
   }
 
   _db = db;

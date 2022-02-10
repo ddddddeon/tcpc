@@ -22,9 +22,6 @@ RSA::PrivateKey GenerateKey(std::string path) {
   std::string privkey_out = path + "id_rsa";
   std::string pubkey_out = path + "id_rsa.pub";
 
-  std::cout << privkey_out << std::endl;
-  std::cout << pubkey_out << std::endl;
-
   try {
     WriteKeyToFile(privkey, (char *)privkey_out.c_str());
     WriteKeyToFile(pubkey, (char *)pubkey_out.c_str());

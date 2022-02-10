@@ -19,6 +19,8 @@ class Logger {
   void Warn(std::string str);
   void Error(std::string str);
   void Log(std::string str);
+  void Line(std::string std);
+  void Raw(std::string str);
 };
 
 }  // namespace TCPChat

@@ -132,7 +132,6 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
-  // TODO make sure we're not overwriting an existing keypair on disk
   _privkey = Crypto::GenerateKey(KeyPairPath);
   _pubkey = RSA::PublicKey(_privkey);
   _pubkey_string = Crypto::PubKeyToString(_pubkey);

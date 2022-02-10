@@ -32,4 +32,7 @@ void Logger::Log(std::string str) {
   }
 }
 
+void Logger::Line(std::string str) { std::cout << str << std::endl; }
+void Logger::Raw(std::string str) { std::cout << str << std::flush; }
+
 }  // namespace TCPChat
