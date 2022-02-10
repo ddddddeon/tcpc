@@ -10,7 +10,6 @@
 
 namespace TCPChat {
 
-// TODO this probably doesn't need to be a class
 namespace Crypto {
 
 CryptoPP::RSA::PrivateKey GenerateKey(std::string path);

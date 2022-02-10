@@ -28,6 +28,7 @@ void Server::Start() {
                std::to_string(_port));
 
   while (_running == 1) {
+    asio::error_code ignored;
     // TODO wrap socket in SSL
     // https://github.com/openssl/openssl/blob/691064c47fd6a7d11189df00a0d1b94d8051cbe0/demos/ssl/serv.cpp
     unique_lock<mutex> sockets_lock(_sockets_mutex);
@@ -45,6 +46,17 @@ void Server::Start() {
     _logger.Info("Accepted connection from " + connection.Address);
 
     // TODO support some kind of MOTD to asio::write to the connection
+
+    std::string motd =
+        "┌──────────────────────────────────────────────────────────┐\r\n"
+        "│                                                          │\r\n"
+        "│                                                          │\r\n"
+        "│                   welcome to tcpchat !                   │\r\n"
+        "│                                                          │\r\n"
+        "│                                                          │\r\n"
+        "└──────────────────────────────────────────────────────────┘\r\n";
+
+    Send(connection.Socket, motd, ignored);
 
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
@@ -85,7 +97,6 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
 std::string Server::ParseSlashCommand(std::string message,
                                       Connection &connection) {
   std::smatch name_match;
-  // TODO change this to look for "/name foobar" instead of "/foobar"
   std::regex name_regex("[A-Za-z0-9]+");
   std::regex_search(message, name_match, name_regex);
 

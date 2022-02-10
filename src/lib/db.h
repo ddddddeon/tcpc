@@ -16,7 +16,7 @@ class DB {
 
  public:
   DB(std::string path) { Initialize(path); }
-  ~DB() { delete _db; }
+  ~DB() { _db->~DB(); }
   std::string Get(std::string name);
   bool Set(std::string name, std::string pubkey);
 };
