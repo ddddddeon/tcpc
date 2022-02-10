@@ -39,6 +39,8 @@ int main(int argc, char *argv[]) {
     std::string yn = "";
     std::cin >> yn;
 
+    // TODO fix newline formatting after this
+
     if (yn.front() == 'y' || yn.front() == 'Y') {
       ClientConfig::GenerateKeyPair = true;
     } else {
@@ -66,8 +68,6 @@ int main(int argc, char *argv[]) {
         "directory with the -k flag.");
     exit(1);
   }
-
-  logger.Info(ClientConfig::Name);
 
   Client client(ClientConfig::Host, ClientConfig::Port, ClientConfig::Name,
                 ClientConfig::GenerateKeyPair, ClientConfig::KeyPairPath,

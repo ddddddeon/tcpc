@@ -82,7 +82,6 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     std::string message = "";
 
     if (!connection.LoggedIn && connection.Name.compare("guest") == 0) {
-      // TODO connection.Authenticated = false;
       connection.LoggedIn = true;
       Socket::Send(connection.Socket, _motd);
     }
@@ -94,7 +93,13 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
       return;
     }
 
-    if (message.front() == '/') {
+    char first_char = message.front();
+
+    if (first_char == '\n' || first_char == '\r') {
+      message = message.substr(1, message.length() - 2);
+    }
+
+    if (first_char == '/') {
       message = ParseSlashCommand(message, connection);
     }
 
@@ -154,6 +159,7 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string db_pubkey = _db.Get(name);
 
   if (db_pubkey.length() == 0) {  // no user in db, free to create
+    message.clear();
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, connection_pubkey);
     connection.Name = name;
@@ -199,13 +205,14 @@ std::string Server::SetUser(std::string name, std::string message,
       }
     }
   }
+
   if (show_entered_message) {
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
   }
 
   return message;
-}  // namespace TCPChat
+}
 
 bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   try {

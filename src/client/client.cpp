@@ -33,8 +33,7 @@ void Client::Connect() {
   _socket = &socket;
 
   // TODO use mutex for socket
-  socket.connect(
-      tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
+  socket.connect(tcp::endpoint(asio::ip::address::from_string(Host), Port));
 
   Authenticate();
 

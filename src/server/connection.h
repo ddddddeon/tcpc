@@ -17,7 +17,6 @@ class Connection {
   tcp::socket &Socket;
   RSA::PublicKey PubKey;
   bool LoggedIn;
-  // TODO add authenticated
 
   Connection(tcp::socket &socket, std::string name, std::string address)
       : Name(name), Address(address), Socket(socket), LoggedIn(false) {}
