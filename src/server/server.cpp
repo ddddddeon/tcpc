@@ -173,7 +173,7 @@ std::string Server::SetUser(std::string name, std::string message,
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
         Socket::Send(connection.Socket,
-                     "Successfully authenticated " + name + "\r\n");
+                     "Successfully authenticated you as " + name + "\r\n");
 
         if (!connection.LoggedIn) {
           Socket::Send(connection.Socket, _motd);
