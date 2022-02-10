@@ -67,6 +67,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  logger.Info(ClientConfig::Name);
+
   Client client(ClientConfig::Host, ClientConfig::Port, ClientConfig::Name,
                 ClientConfig::GenerateKeyPair, ClientConfig::KeyPairPath,
                 logger);
