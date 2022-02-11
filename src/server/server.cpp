@@ -220,10 +220,12 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   try {
     RSA::PublicKey pubkey = Crypto::StringToPubKey(pubkey_string);
     connection.PubKey = pubkey;
-    return true;
 
     // TODO generate a random nonce
-    std::string nonce = "foobar";
+    std::string nonce = Crypto::GenerateNonce();
+    _logger.Info("Generated nonce" + nonce);
+
+    // TODO get rid of the buffer argument from ReadLine
     asio::streambuf buf;
 
     Socket::Send(connection.Socket, "/verify " + nonce + "\r\n");

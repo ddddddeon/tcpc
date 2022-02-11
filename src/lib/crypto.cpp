@@ -83,6 +83,15 @@ std::string ExpandNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\\?"), "\n");
 }
 
+std::string GenerateNonce() {
+  std::cout << "hellooo" << std::endl;
+  AutoSeededRandomPool rng;
+  byte bytes[32];
+  rng.GenerateBlock(bytes, 32);
+  std::string nonce(bytes, bytes + 32);
+  return nonce;
+}
+
 bool Sign(std::string message, RSA::PublicKey pubkey) {}
 
 bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
