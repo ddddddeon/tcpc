@@ -222,27 +222,26 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
 
     // TODO generate a random nonce
     std::string nonce = Crypto::GenerateNonce();
-    _logger.Info("Generated nonce" + nonce);
+    _logger.Info("Generated nonce: " + nonce);
 
     Socket::Send(connection.Socket, "/verify " + nonce + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
 
-    Socket::ParseVerifyMessage(response);
+    if (Socket::ParseVerifyMessage(response)) {
+      bool verified = Crypto::Verify(response, nonce, pubkey);
+      if (!verified) {
+        return false;
+      }
 
-    bool verified = Crypto::Verify(response, nonce, pubkey);
-
-    if (!verified) {
-      return false;
-    } else {
       connection.PubKey = pubkey;
       return true;
     }
-
+    return false;
   } catch (std::exception &e) {
     _logger.Error(e.what());
     return false;
   }
-}
+}  // namespace TCPChat
 
 void Server::Broadcast(std::string message) {
   asio::error_code ignored;

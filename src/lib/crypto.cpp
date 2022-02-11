@@ -91,9 +91,16 @@ std::string GenerateNonce() {
   return nonce;
 }
 
-bool Sign(std::string message, RSA::PublicKey pubkey) {}
+std::string Sign(std::string message, RSA::PrivateKey privkey) {
+  // TODO actually sign
+  return std::string("hellooo");
+}
 
 bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
+  // TODO remove
+  std::cout << "Message: " << message << std::endl;
+  std::cout << "Signature: " << signature << std::endl;
+
   // TODO actually verify
   return true;
 }

@@ -179,11 +179,12 @@ void Client::Authenticate() {
 
   Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-  std::string verify_response = Socket::ReadLine(*_socket);
+  std::string nonce_response = Socket::ReadLine(*_socket);
 
-  if (Socket::ParseVerifyMessage(verify_response)) {
-    Socket::Send(*_socket, "/verify foobar\n");
-    asio::streambuf verified_buf;
+  if (Socket::ParseVerifyMessage(nonce_response)) {
+    std::string signature = Crypto::Sign(nonce_response, _privkey);
+    _logger.Info(signature + "\r");
+    Socket::Send(*_socket, "/verify " + signature + "\n");
     std::string verified_response = Socket::ReadLine(*_socket);
     _logger.Raw(verified_response);
   }

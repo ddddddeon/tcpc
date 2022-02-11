@@ -20,7 +20,7 @@ std::string PubKeyToString(CryptoPP::RSA::PublicKey pubkey);
 std::string StripNewLines(std::string key);
 std::string ExpandNewLines(std::string key);
 std::string GenerateNonce();
-bool Sign(std::string message, CryptoPP::RSA::PublicKey pubkey);
+std::string Sign(std::string message, CryptoPP::RSA::PrivateKey privkey);
 bool Verify(std::string signature, std::string message,
             CryptoPP::RSA::PublicKey pubkey);
 
