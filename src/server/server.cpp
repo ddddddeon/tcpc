@@ -217,8 +217,10 @@ std::string Server::SetUser(std::string name, std::string message,
 bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   try {
     RSA::PublicKey pubkey = Crypto::StringToPubKey(pubkey_string);
+    connection.PubKey = pubkey;
+    return true;
 
-    // TODO do some kind of verification-- ask the user to sign something?
+    // TODO generate a random nonce
     std::string nonce = "foobar";
     asio::streambuf buf;
 
@@ -235,6 +237,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
       connection.PubKey = pubkey;
       return true;
     }
+
   } catch (std::exception &e) {
     _logger.Error(e.what());
     return false;

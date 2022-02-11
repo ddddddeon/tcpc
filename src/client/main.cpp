@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
     logger.Raw(
         "*** No keypair found at " + ClientConfig::KeyPairPath +
         "\nWould you like to generate a keypair at this location now?\n[y/n] ");
+
     std::string yn = "";
     std::cin >> yn;
 
