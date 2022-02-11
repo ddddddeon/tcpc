@@ -39,6 +39,8 @@ int main(int argc, char *argv[]) {
     std::string yn = "";
     std::cin >> yn;
 
+    // TODO fix newline formatting after this
+
     if (yn.front() == 'y' || yn.front() == 'Y') {
       ClientConfig::GenerateKeyPair = true;
     } else {

@@ -12,6 +12,7 @@
 
 #include "../lib/crypto.h"
 #include "../lib/filesystem.h"
+#include "../lib/socket.h"
 #include "connection.h"
 
 using asio::ip::tcp;
@@ -29,7 +30,6 @@ void Server::Start() {
                std::to_string(_port));
 
   while (_running == 1) {
-    asio::error_code ignored;
     // TODO wrap socket in SSL
     // https://github.com/openssl/openssl/blob/691064c47fd6a7d11189df00a0d1b94d8051cbe0/demos/ssl/serv.cpp
     unique_lock<mutex> sockets_lock(_sockets_mutex);
@@ -45,10 +45,6 @@ void Server::Start() {
     connections_lock.unlock();
 
     _logger.Info("Accepted connection from " + connection.Address);
-
-    Send(connection.Socket, _motd, ignored);
-    Broadcast(connection.Name + " has entered the chat (" + connection.Address +
-              ")\r\n");
 
     unique_lock<mutex> threads_lock(_threads_mutex);
     _threads.push_front(std::thread(&Server::Handle, this, std::ref(socket),
@@ -83,18 +79,27 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
   int connected = 1;
   while (connected == 1) {
     asio::streambuf buf;
+    std::string message = "";
+
+    if (!connection.LoggedIn && connection.Name.compare("guest") == 0) {
+      connection.LoggedIn = true;
+      Socket::Send(connection.Socket, _motd);
+    }
 
     try {
-      size_t s = asio::read_until(socket, buf, "\n");
+      message = Socket::ReadLine(socket, buf);
     } catch (std::exception &e) {
       connected = Disconnect(socket);
       return;
     }
 
-    asio::streambuf::const_buffers_type bufs = buf.data();
-    std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
+    char first_char = message.front();
 
-    if (message.front() == '/') {
+    if (first_char == '\n' || first_char == '\r') {
+      message = message.substr(1, message.length() - 2);
+    }
+
+    if (first_char == '/') {
       message = ParseSlashCommand(message, connection);
     }
 
@@ -120,25 +125,31 @@ std::string Server::ParseSlashCommand(std::string message,
 
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
-  asio::error_code ignored;
+  bool show_entered_message = true;
   std::string error = "";
   std::smatch key_match;
   std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
   std::regex_search(message, key_match, key_regex);
-  std::string pubkey_string = Crypto::PubKeyToString(connection.PubKey);
-  bool got_valid_pubkey = false;
+  std::string pubkey_string = "";
+  try {
+    pubkey_string = Crypto::PubKeyToString(connection.PubKey);
+  } catch (std::exception &e) {
+    _logger.Error("foo");
+  }
 
-  if (key_match.length() > 0) {
+  if (key_match.length() == 0) {
+    show_entered_message = false;
+  } else {
     std::string match = key_match.str();
     pubkey_string = Crypto::ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
+
     try {
       connection.PubKey = Crypto::StringToPubKey(pubkey_string);
-      got_valid_pubkey = true;
     } catch (std::exception &e) {
       error = "*** Invalid public key from " + name;
-      Send(connection.Socket, error + "\r\n", ignored);
+      Socket::Send(connection.Socket, error + "\r\n");
       _logger.Error(error);
     }
   }
@@ -148,35 +159,56 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string db_pubkey = _db.Get(name);
 
   if (db_pubkey.length() == 0) {  // no user in db, free to create
+    message.clear();
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, connection_pubkey);
     connection.Name = name;
-
+    connection.LoggedIn = true;
+    if (!show_entered_message) {
+      message = old_name + " (" + connection.Address + ") renamed to " +
+                connection.Name + "\n";
+    }
   } else if (db_pubkey.length() > 0) {
+    message.clear();
+
     if (connection_pubkey.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
-      Send(connection.Socket, error + "\r\n", ignored);
+      Socket::Send(connection.Socket, error + "\r\n");
     } else {
       _logger.Info("Authenticating " + name + "...");
       bool authenticated = Authenticate(pubkey_string, connection);
-      if (authenticated == true) {
-        connection.Name = name;
-        _logger.Info("Successfully authenticated " + name);
-      } else {
+      if (!authenticated) {
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
-        Send(connection.Socket, error, ignored);
+        Socket::Send(connection.Socket, error);
+      } else {
+        connection.Name = name;
+        _logger.Info("Successfully authenticated " + name);
+        Socket::Send(connection.Socket,
+                     "Successfully authenticated you as " + name + "\r\n");
+
+        if (!connection.LoggedIn) {
+          Socket::Send(connection.Socket, _motd);
+          connection.LoggedIn = true;
+          Broadcast(connection.Name + " has entered the chat (" +
+                    connection.Address + ")\r\n");
+          show_entered_message = false;
+
+        } else if (connection.Name.compare(old_name) != 0) {
+          // TODO kick guest users around here if server is set to private
+          if (!show_entered_message) {
+            message = old_name + " (" + connection.Address + ") renamed to " +
+                      connection.Name + "\n";
+          }
+        }
       }
     }
   }
 
-  message.clear();
-
-  if (connection.Name.compare("guest") != 0 &&
-      connection.Name.compare(old_name) != 0) {
-    message = old_name + " (" + connection.Address + ") renamed to " +
-              connection.Name + "\n";
+  if (show_entered_message) {
+    Broadcast(connection.Name + " has entered the chat (" + connection.Address +
+              ")\r\n");
   }
 
   return message;
@@ -187,17 +219,26 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     RSA::PublicKey pubkey = Crypto::StringToPubKey(pubkey_string);
 
     // TODO do some kind of verification-- ask the user to sign something?
-    connection.PubKey = pubkey;
-    return true;
+    std::string nonce = "foobar";
+    asio::streambuf buf;
+
+    Socket::Send(connection.Socket, "/verify " + nonce + "\r\n");
+    std::string response = Socket::ReadLine(connection.Socket, buf);
+
+    Socket::ParseVerifyMessage(response);
+
+    bool verified = Crypto::Verify(response, pubkey);
+
+    if (!verified) {
+      return false;
+    } else {
+      connection.PubKey = pubkey;
+      return true;
+    }
   } catch (std::exception &e) {
     _logger.Error(e.what());
     return false;
   }
-}
-
-void Server::Send(tcp::socket &socket, std::string message,
-                  asio::error_code &code) {
-  asio::write(socket, asio::buffer(message), code);
 }
 
 void Server::Broadcast(std::string message) {
@@ -205,7 +246,7 @@ void Server::Broadcast(std::string message) {
   unique_lock<mutex> sockets_lock(_sockets_mutex);
   auto socket = _sockets.begin();
   while (socket != _sockets.end()) {
-    Send(*socket, message, ignored);
+    Socket::Send(*socket, message);
     socket++;
   }
   sockets_lock.unlock();

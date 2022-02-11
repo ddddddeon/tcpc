@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "../lib/crypto.h"
+#include "../lib/socket.h"
 
 using asio::ip::tcp;
 using std::cout;
@@ -31,11 +32,8 @@ void Client::Connect() {
   tcp::socket socket(service);
   _socket = &socket;
 
-  socket.connect(
-      tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 9000));
-
-  _logger.Info("Connected to " + Host + ":" + std::to_string(Port) + " as " +
-               Name + '\r');
+  // TODO use mutex for socket
+  socket.connect(tcp::endpoint(asio::ip::address::from_string(Host), Port));
 
   Authenticate();
 
@@ -54,6 +52,7 @@ void Client::ReadMessages(tcp::socket &socket) {
     asio::streambuf buf;
 
     try {
+      // TODO change to Socket::Readline and handle accordingly
       size_t s = asio::read_until(socket, buf, "\n");
     } catch (std::exception &e) {
       _logger.Error(e.what());
@@ -64,21 +63,32 @@ void Client::ReadMessages(tcp::socket &socket) {
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
     message = message.substr(0, message.size() - 2);
 
-    cout << flush;
+    if (Socket::ParseVerifyMessage(message)) {
+      Socket::Send(*_socket, "/verify foobar\n");
 
-    if (_user_input.length() != 0) {
-      cout << '\r' << flush;
+      asio::streambuf verified_buf;
+      std::string verified_response = Socket::ReadLine(*_socket, verified_buf);
+      _logger.Raw(verified_response);
+      message.clear();
+      cout << flush;
+    } else {
+      cout << flush;
+
+      if (_user_input.length() != 0) {
+        // TODO use _logger.Raw for things like this
+        cout << '\r' << flush;
+      }
+
+      std::string padding;
+      int overflow = _user_input.length() - message.length();
+      if (overflow > 0) {
+        padding = std::string(overflow, ' ');
+      }
+      std::string padded_message = message + padding + "\r\n";
+
+      cout << padded_message << flush;
+      cout << _user_input << flush;
     }
-
-    std::string padding;
-    int overflow = _user_input.length() - message.length();
-    if (overflow > 0) {
-      padding = std::string(overflow, ' ');
-    }
-    std::string padded_message = message + padding + "\r\n";
-
-    cout << padded_message << flush;
-    cout << _user_input << flush;
   }
 }
 
@@ -161,12 +171,27 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  std::string pubkey = "";
-  if (Name.compare("guest") != 0) {
-    pubkey = _pubkey_string;
-  }
+  asio::streambuf buf;
+  std::string motd = Socket::ReadLine(*_socket, buf);
+  _logger.Raw(motd);
 
-  asio::write(*_socket, asio::buffer("/" + Name + " " + pubkey + "\n"));
+  asio::streambuf verify_buf;
+  std::string verify_response = Socket::ReadLine(*_socket, verify_buf);
+  _logger.Raw(verify_response);
+
+  Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
+
+  asio::streambuf vbuf;
+  std::string vr = Socket::ReadLine(*_socket, vbuf);
+
+  if (Socket::ParseVerifyMessage(vr)) {
+    Socket::Send(*_socket, "/verify foobar\n");
+    asio::streambuf verified_buf;
+    std::string verified_response = Socket::ReadLine(*_socket, verified_buf);
+    _logger.Raw(verified_response);
+  }
 }
+
+bool Client::Verify(std::string message) { return true; }
 
 }  // namespace TCPChat
