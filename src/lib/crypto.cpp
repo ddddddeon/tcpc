@@ -45,8 +45,8 @@ void WriteKeyToFile(RSAFunction &key, char *out) {
 }
 
 CryptoPP::ByteQueue LoadKeyFromFile(std::string path) {
-  CryptoPP::ByteQueue bytes;
-  CryptoPP::FileSource file(path.c_str(), true, new CryptoPP::Base64Decoder);
+  ByteQueue bytes;
+  FileSource file(path.c_str(), true, new Base64Decoder);
   file.TransferTo(bytes);
   bytes.MessageEnd();
   return bytes;
@@ -92,28 +92,60 @@ std::string GenerateNonce() {
 }
 
 std::string Sign(std::string message, RSA::PrivateKey privkey) {
-  // TODO actually sign
   AutoSeededRandomPool rng;
+  // TODO is this where i'm going wrong?
   privkey.GenerateRandomWithKeySize(rng, 2048);
   RSASS<PSS, SHA256>::Signer signer(privkey);
-  size_t length = signer.MaxSignatureLength();
-  SecByteBlock signature(length);
+  size_t max_length = signer.MaxSignatureLength();
+  SecByteBlock signature(max_length);
 
-  length = signer.SignMessage(rng, (const byte *)message.c_str(),
-                              message.length(), signature);
+  std::cout << "Message: " << message << std::endl;
+  std::cout << "Message length: " << message.length() << std::endl;
+
+  size_t length = signer.SignMessage(rng, (const byte *)message.c_str(),
+                                     message.length(), (byte *)signature);
   signature.resize(length);
-  std::string sig((byte *)signature, signature + signature.size());
 
-  return sig;
+  std::cout << "Original size: " << signature.size() << std::endl;
+
+  std::string encoded;
+  CryptoPP::StringSource ss(signature.data(), signature.size(), true,
+                            new Base64Encoder(new StringSink(encoded)));
+
+  std::cout << "Encoded size: " << encoded.size() << std::endl;
+
+  return encoded;
 }
 
 bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
   // TODO remove
   std::cout << "Message: " << message << std::endl;
-  std::cout << "Signature: " << signature << std::endl;
+  std::cout << "Signature: " << signature.data() << std::endl;
+  std::cout << "Signature size: " << signature.size() << std::endl;
 
-  // TODO actually verify
-  return true;
+  RSASS<PSS, SHA256>::Verifier verifier(pubkey);
+
+  Base64Decoder decoder;
+  decoder.Put((const byte *)signature.data(), signature.size());
+  decoder.MessageEnd();
+  size_t size = decoder.MaxRetrievable();
+  byte decoded[size];
+  decoder.Get((byte *)&decoded[0], size);
+
+  SecByteBlock bytes((const byte *)decoded, size);
+
+  std::cout << "Message: " << message << std::endl;
+  std::cout << "Message length: " << message.length() << std::endl;
+
+  std::cout << "Signature: " << bytes.data() << std::endl;
+  std::cout << "Signature size: " << bytes.size() << std::endl;
+
+  // TODO figure out why this isn't verifying--
+  // message.length and bytes.length match from client to server...
+  bool verified =
+      verifier.VerifyMessage((const byte *)message.c_str(), message.length(),
+                             (const byte *)bytes.data(), bytes.size());
+  return verified;
 }
 
 }  // namespace Crypto

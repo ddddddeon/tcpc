@@ -26,8 +26,9 @@ bool ParseVerifyMessage(std::string &message) {
 
   if (signature_match.length() > 0) {
     message = std::regex_replace(message, std::regex("\/verify "), "");
-    message = std::regex_replace(message, std::regex("\r"), "");
-    message = std::regex_replace(message, std::regex("\n"), "");
+    message = message.substr(0, message.size() - 1);
+    // message = std::regex_replace(message, std::regex("\r"), "");
+    // message = std::regex_replace(message, std::regex("\n"), "");
     return true;
   }
   return false;

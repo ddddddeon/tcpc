@@ -12,6 +12,7 @@
 #include "../lib/socket.h"
 
 using asio::ip::tcp;
+using CryptoPP::SecByteBlock;
 using std::cout;
 using std::endl;
 using std::flush;
@@ -180,9 +181,11 @@ void Client::Authenticate() {
   Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
   std::string nonce_response = Socket::ReadLine(*_socket);
+  nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
   if (Socket::ParseVerifyMessage(nonce_response)) {
     std::string signature = Crypto::Sign(nonce_response, _privkey);
+
     _logger.Info(signature + "\r");
     Socket::Send(*_socket, "/verify " + signature + "\n");
     std::string verified_response = Socket::ReadLine(*_socket);
