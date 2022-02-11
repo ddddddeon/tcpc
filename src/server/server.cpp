@@ -78,7 +78,6 @@ std::string Server::LoadMOTD(std::string path) {
 void Server::Handle(tcp::socket &socket, Connection &connection) {
   int connected = 1;
   while (connected == 1) {
-    asio::streambuf buf;
     std::string message = "";
 
     if (!connection.LoggedIn && connection.Name.compare("guest") == 0) {
@@ -87,7 +86,7 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     }
 
     try {
-      message = Socket::ReadLine(socket, buf);
+      message = Socket::ReadLine(socket);
     } catch (std::exception &e) {
       connected = Disconnect(socket);
       return;
@@ -225,11 +224,8 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     std::string nonce = Crypto::GenerateNonce();
     _logger.Info("Generated nonce" + nonce);
 
-    // TODO get rid of the buffer argument from ReadLine
-    asio::streambuf buf;
-
     Socket::Send(connection.Socket, "/verify " + nonce + "\r\n");
-    std::string response = Socket::ReadLine(connection.Socket, buf);
+    std::string response = Socket::ReadLine(connection.Socket);
 
     Socket::ParseVerifyMessage(response);
 

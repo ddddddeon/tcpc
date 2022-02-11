@@ -84,7 +84,6 @@ std::string ExpandNewLines(std::string key) {
 }
 
 std::string GenerateNonce() {
-  std::cout << "hellooo" << std::endl;
   AutoSeededRandomPool rng;
   byte bytes[32];
   rng.GenerateBlock(bytes, 32);

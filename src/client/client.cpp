@@ -67,7 +67,7 @@ void Client::ReadMessages(tcp::socket &socket) {
       Socket::Send(*_socket, "/verify foobar\n");
 
       asio::streambuf verified_buf;
-      std::string verified_response = Socket::ReadLine(*_socket, verified_buf);
+      std::string verified_response = Socket::ReadLine(*_socket);
       _logger.Raw(verified_response);
       message.clear();
       cout << flush;
@@ -171,23 +171,20 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  asio::streambuf buf;
-  std::string motd = Socket::ReadLine(*_socket, buf);
+  std::string motd = Socket::ReadLine(*_socket);
   _logger.Raw(motd);
 
-  asio::streambuf buf2;
-  std::string response = Socket::ReadLine(*_socket, buf2);
+  std::string response = Socket::ReadLine(*_socket);
   _logger.Raw(response);
 
   Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-  asio::streambuf verify_buf;
-  std::string verify_response = Socket::ReadLine(*_socket, verify_buf);
+  std::string verify_response = Socket::ReadLine(*_socket);
 
   if (Socket::ParseVerifyMessage(verify_response)) {
     Socket::Send(*_socket, "/verify foobar\n");
     asio::streambuf verified_buf;
-    std::string verified_response = Socket::ReadLine(*_socket, verified_buf);
+    std::string verified_response = Socket::ReadLine(*_socket);
     _logger.Raw(verified_response);
   }
 }
