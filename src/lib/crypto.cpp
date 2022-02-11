@@ -83,7 +83,9 @@ std::string ExpandNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\\?"), "\n");
 }
 
-bool Verify(std::string signature, RSA::PublicKey pubkey) {
+bool Sign(std::string message, RSA::PublicKey pubkey) {}
+
+bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
   // TODO actually verify
   return true;
 }

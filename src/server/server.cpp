@@ -96,7 +96,7 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     char first_char = message.front();
 
     if (first_char == '\n' || first_char == '\r') {
-      message = message.substr(1, message.length() - 2);
+      message = message.substr(1, message.length() - 1);
     }
 
     if (first_char == '/') {
@@ -164,6 +164,8 @@ std::string Server::SetUser(std::string name, std::string message,
     _db.Set(name, connection_pubkey);
     connection.Name = name;
     connection.LoggedIn = true;
+    Socket::Send(connection.Socket,
+                 "Successfully claimed user name " + name + "\r\n");
     if (!show_entered_message) {
       message = old_name + " (" + connection.Address + ") renamed to " +
                 connection.Name + "\n";
@@ -229,7 +231,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
 
     Socket::ParseVerifyMessage(response);
 
-    bool verified = Crypto::Verify(response, pubkey);
+    bool verified = Crypto::Verify(response, nonce, pubkey);
 
     if (!verified) {
       return false;

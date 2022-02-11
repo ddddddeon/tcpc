@@ -175,23 +175,21 @@ void Client::Authenticate() {
   std::string motd = Socket::ReadLine(*_socket, buf);
   _logger.Raw(motd);
 
-  asio::streambuf verify_buf;
-  std::string verify_response = Socket::ReadLine(*_socket, verify_buf);
-  _logger.Raw(verify_response);
+  asio::streambuf buf2;
+  std::string response = Socket::ReadLine(*_socket, buf2);
+  _logger.Raw(response);
 
   Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-  asio::streambuf vbuf;
-  std::string vr = Socket::ReadLine(*_socket, vbuf);
+  asio::streambuf verify_buf;
+  std::string verify_response = Socket::ReadLine(*_socket, verify_buf);
 
-  if (Socket::ParseVerifyMessage(vr)) {
+  if (Socket::ParseVerifyMessage(verify_response)) {
     Socket::Send(*_socket, "/verify foobar\n");
     asio::streambuf verified_buf;
     std::string verified_response = Socket::ReadLine(*_socket, verified_buf);
     _logger.Raw(verified_response);
   }
 }
-
-bool Client::Verify(std::string message) { return true; }
 
 }  // namespace TCPChat

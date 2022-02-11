@@ -29,7 +29,6 @@ class Client {
   void ProcessInputChar();
   void GenerateKeyPair();
   void Authenticate();
-  bool Verify(std::string message);
 
  public:
   std::string Host;
