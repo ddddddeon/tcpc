@@ -1,31 +1,22 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
 
-#include <crypto++/base64.h>
-#include <crypto++/files.h>
-#include <crypto++/filters.h>
-#include <crypto++/osrng.h>
-#include <crypto++/pssr.h>
-#include <crypto++/rsa.h>
-#include <crypto++/secblock.h>
-
 #include <string>
 
 namespace TCPChat {
 
 namespace Crypto {
 
-CryptoPP::RSA::PrivateKey GenerateKey(std::string path);
-void WriteKeyToFile(CryptoPP::RSAFunction &key, char *out);
-CryptoPP::ByteQueue LoadKeyFromFile(std::string path);
-CryptoPP::RSA::PublicKey StringToPubKey(std::string pubkey_string);
-std::string PubKeyToString(CryptoPP::RSA::PublicKey pubkey);
+int GenerateKey(std::string path);
+void WriteKeyToFile(int key, char *out);
+int LoadKeyFromFile(std::string path);
+std::string PubKeyToString(int pubkey);
+int StringToPubKey(std::string pubkey_string);
+std::string GenerateNonce();
+std::string Sign(std::string message, int privkey);
+bool Verify(std::string signature, std::string message, int pubkey);
 std::string StripNewLines(std::string key);
 std::string ExpandNewLines(std::string key);
-std::string GenerateNonce();
-std::string Sign(std::string message, CryptoPP::RSA::PrivateKey privkey);
-bool Verify(std::string signature, std::string message,
-            CryptoPP::RSA::PublicKey pubkey);
 
 };  // namespace Crypto
 

@@ -5,73 +5,26 @@
 #include <iostream>
 #include <regex>
 
-using namespace CryptoPP;
-
 namespace TCPChat {
 
 namespace Crypto {
 
-RSA::PrivateKey GenerateKey(std::string path) {
-  AutoSeededRandomPool rng;
-  RSA::PrivateKey privkey;
-  privkey.GenerateRandomWithKeySize(rng, 2048);
+int GenerateKey(std::string path) { return 0; }
 
-  RSA::PublicKey pubkey(privkey);
+void WriteKeyToFile(int key, char *out) {}
 
-  std::string privkey_out = path + "id_rsa";
-  std::string pubkey_out = path + "id_rsa.pub";
+int LoadKeyFromFile(std::string path) { return 0; }
 
-  try {
-    WriteKeyToFile(privkey, (char *)privkey_out.c_str());
-    WriteKeyToFile(pubkey, (char *)pubkey_out.c_str());
-  } catch (std::exception &e) {
-    std::cout << e.what() << std::endl;
-  }
+std::string PubKeyToString(int pubkey) {}
 
-  return privkey;
-}
+int StringToPubKey(std::string pubkey_string) {}
 
-void WriteKeyToFile(RSAFunction &key, char *out) {
-  Base64Encoder encoder;
-  FileSink output(out);
-  ByteQueue queue;
-  key.Save(queue);
-  queue.CopyTo(encoder);
-  encoder.MessageEnd();
+std::string GenerateNonce() { return ""; }
 
-  encoder.CopyTo(output);
-  output.MessageEnd();
-}
+std::string Sign(std::string message, int privkey) { return "foobar"; }
 
-CryptoPP::ByteQueue LoadKeyFromFile(std::string path) {
-  ByteQueue bytes;
-  FileSource file(path.c_str(), true, new Base64Decoder);
-  file.TransferTo(bytes);
-  bytes.MessageEnd();
-  return bytes;
-}
-
-std::string PubKeyToString(RSA::PublicKey pubkey) {
-  Base64Encoder encoder;
-  std::string pubkey_string;
-  StringSink output(pubkey_string);
-  ByteQueue queue;
-  pubkey.Save(queue);
-  queue.CopyTo(encoder);
-  encoder.MessageEnd();
-
-  encoder.CopyTo(output);
-  output.MessageEnd();
-
-  return pubkey_string;
-}
-
-RSA::PublicKey StringToPubKey(std::string pubkey_string) {
-  StringSource pubkey_source(pubkey_string, true, new Base64Decoder);
-  RSA::PublicKey pubkey;
-  pubkey.Load(pubkey_source);
-
-  return pubkey;
+bool Verify(std::string signature, std::string message, int pubkey) {
+  return true;
 }
 
 std::string StripNewLines(std::string key) {
@@ -80,80 +33,6 @@ std::string StripNewLines(std::string key) {
 
 std::string ExpandNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\\?"), "\n");
-}
-
-std::string GenerateNonce() {
-  AutoSeededRandomPool rng;
-  byte bytes[32];
-  rng.GenerateBlock(bytes, 32);
-  std::string nonce(bytes, bytes + 32);
-  return nonce;
-}
-
-std::string Sign(std::string message, RSA::PrivateKey privkey) {
-  // AutoSeededRandomPool rng;
-  // RSASS<PSSR, SHA>::Signer signer(privkey);
-  // size_t max_length = signer.MaxSignatureLength();
-  // SecByteBlock signature(max_length);
-
-  // std::cout << "Message: " << message << std::endl;
-  // std::cout << "Message length: " << message.length() << std::endl;
-
-  // size_t length = signer.SignMessage(rng, (const byte *)message.c_str(),
-  //                                    message.length(), (byte *)signature);
-  // signature.resize(length);
-
-  // std::cout << "Original size: " << signature.size() << std::endl;
-
-  // std::string encoded;
-  // CryptoPP::StringSource ss(signature.data(), signature.size(), true,
-  //                           new StringSink(encoded));
-
-  // std::cout << "Encoded size: " << encoded.size() << std::endl;
-
-  // std::string sig((const char *)signature.data(), signature.size());
-
-  // return sig;
-
-  // Signing disabled, awaiting a working implementation
-  return "foobar";
-}
-
-bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
-  // TODO remove
-  // std::cout << "Message: " << message << std::endl;
-  // std::cout << "Signature: " << signature.data() << std::endl;
-  // std::cout << "Signature size: " << signature.size() << std::endl;
-
-  // This fails saying the public key is too short
-  // TODO learn how signing schemes work
-  // OR just reimplement the entire crypto library with openSSL?
-  // RSASS<PSSR, SHA>::Verifier verifier(pubkey);
-
-  // Base64Decoder decoder;
-  // decoder.Put((const byte *)signature.data(), signature.size());
-  // decoder.MessageEnd();
-  // size_t size = decoder.MaxRetrievable();
-  // byte decoded[size];
-  // decoder.Get((byte *)&decoded[0], size);
-
-  // SecByteBlock bytes((const byte *)signature.data(), signature.size());
-
-  // std::cout << "Message: " << message << std::endl;
-  // std::cout << "Message length: " << message.length() << std::endl;
-
-  // std::cout << "Signature: " << bytes.data() << std::endl;
-  // std::cout << "Signature size: " << bytes.size() << std::endl;
-
-  // TODO figure out why this isn't verifying--
-  // message.length and bytes.length match from client to server...
-  // bool verified = verifier.VerifyMessage((const byte *)message.c_str(),
-  //                                        message.length(), bytes,
-  //                                        bytes.size());
-  // return verified;
-
-  // Verification disabled, awaiting a working implementation
-  return true;
 }
 
 }  // namespace Crypto
