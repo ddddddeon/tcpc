@@ -4,6 +4,7 @@
 #include <crypto++/base64.h>
 #include <crypto++/files.h>
 #include <crypto++/osrng.h>
+#include <crypto++/pssr.h>
 #include <crypto++/rsa.h>
 
 #include <string>

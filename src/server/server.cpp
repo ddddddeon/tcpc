@@ -171,7 +171,7 @@ std::string Server::SetUser(std::string name, std::string message,
     }
   } else if (db_pubkey.length() > 0) {
     message.clear();
-
+    // TODO handle all instances of Send() or ReadLine() for response.length 0
     if (connection_pubkey.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);

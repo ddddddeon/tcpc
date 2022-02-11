@@ -93,7 +93,18 @@ std::string GenerateNonce() {
 
 std::string Sign(std::string message, RSA::PrivateKey privkey) {
   // TODO actually sign
-  return std::string("hellooo");
+  AutoSeededRandomPool rng;
+  privkey.GenerateRandomWithKeySize(rng, 2048);
+  RSASS<PSS, SHA256>::Signer signer(privkey);
+  size_t length = signer.MaxSignatureLength();
+  SecByteBlock signature(length);
+
+  length = signer.SignMessage(rng, (const byte *)message.c_str(),
+                              message.length(), signature);
+  signature.resize(length);
+  std::string sig((byte *)signature, signature + signature.size());
+
+  return sig;
 }
 
 bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
