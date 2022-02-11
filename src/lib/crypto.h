@@ -7,6 +7,7 @@
 #include <crypto++/osrng.h>
 #include <crypto++/pssr.h>
 #include <crypto++/rsa.h>
+#include <crypto++/secblock.h>
 
 #include <string>
 

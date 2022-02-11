@@ -15,7 +15,6 @@ RSA::PrivateKey GenerateKey(std::string path) {
   AutoSeededRandomPool rng;
   RSA::PrivateKey privkey;
   privkey.GenerateRandomWithKeySize(rng, 2048);
-  privkey.SetPublicExponent(65535);
 
   RSA::PublicKey pubkey(privkey);
 
@@ -93,9 +92,7 @@ std::string GenerateNonce() {
 
 std::string Sign(std::string message, RSA::PrivateKey privkey) {
   AutoSeededRandomPool rng;
-  // TODO is this where i'm going wrong?
-  privkey.GenerateRandomWithKeySize(rng, 2048);
-  RSASS<PSS, SHA256>::Signer signer(privkey);
+  RSASS<PSSR, SHA>::Signer signer(privkey);
   size_t max_length = signer.MaxSignatureLength();
   SecByteBlock signature(max_length);
 
@@ -108,13 +105,15 @@ std::string Sign(std::string message, RSA::PrivateKey privkey) {
 
   std::cout << "Original size: " << signature.size() << std::endl;
 
-  std::string encoded;
-  CryptoPP::StringSource ss(signature.data(), signature.size(), true,
-                            new Base64Encoder(new StringSink(encoded)));
+  // std::string encoded;
+  // CryptoPP::StringSource ss(signature.data(), signature.size(), true,
+  //                           new StringSink(encoded));
 
-  std::cout << "Encoded size: " << encoded.size() << std::endl;
+  // std::cout << "Encoded size: " << encoded.size() << std::endl;
 
-  return encoded;
+  std::string sig((const char *)signature.data(), signature.size());
+
+  return sig;
 }
 
 bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
@@ -123,16 +122,16 @@ bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
   std::cout << "Signature: " << signature.data() << std::endl;
   std::cout << "Signature size: " << signature.size() << std::endl;
 
-  RSASS<PSS, SHA256>::Verifier verifier(pubkey);
+  RSASS<PSSR, SHA>::Verifier verifier(pubkey);
 
-  Base64Decoder decoder;
-  decoder.Put((const byte *)signature.data(), signature.size());
-  decoder.MessageEnd();
-  size_t size = decoder.MaxRetrievable();
-  byte decoded[size];
-  decoder.Get((byte *)&decoded[0], size);
+  // Base64Decoder decoder;
+  // decoder.Put((const byte *)signature.data(), signature.size());
+  // decoder.MessageEnd();
+  // size_t size = decoder.MaxRetrievable();
+  // byte decoded[size];
+  // decoder.Get((byte *)&decoded[0], size);
 
-  SecByteBlock bytes((const byte *)decoded, size);
+  SecByteBlock bytes((const byte *)signature.data(), signature.size());
 
   std::cout << "Message: " << message << std::endl;
   std::cout << "Message length: " << message.length() << std::endl;
@@ -142,9 +141,8 @@ bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
 
   // TODO figure out why this isn't verifying--
   // message.length and bytes.length match from client to server...
-  bool verified =
-      verifier.VerifyMessage((const byte *)message.c_str(), message.length(),
-                             (const byte *)bytes.data(), bytes.size());
+  bool verified = verifier.VerifyMessage((const byte *)message.c_str(),
+                                         message.length(), bytes, bytes.size());
   return verified;
 }
 
