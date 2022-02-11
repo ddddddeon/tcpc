@@ -185,8 +185,6 @@ void Client::Authenticate() {
 
   if (Socket::ParseVerifyMessage(nonce_response)) {
     std::string signature = Crypto::Sign(nonce_response, _privkey);
-
-    _logger.Info(signature + "\r");
     Socket::Send(*_socket, "/verify " + signature + "\n");
     std::string verified_response = Socket::ReadLine(*_socket);
     _logger.Raw(verified_response);

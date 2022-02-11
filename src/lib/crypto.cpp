@@ -91,19 +91,19 @@ std::string GenerateNonce() {
 }
 
 std::string Sign(std::string message, RSA::PrivateKey privkey) {
-  AutoSeededRandomPool rng;
-  RSASS<PSSR, SHA>::Signer signer(privkey);
-  size_t max_length = signer.MaxSignatureLength();
-  SecByteBlock signature(max_length);
+  // AutoSeededRandomPool rng;
+  // RSASS<PSSR, SHA>::Signer signer(privkey);
+  // size_t max_length = signer.MaxSignatureLength();
+  // SecByteBlock signature(max_length);
 
-  std::cout << "Message: " << message << std::endl;
-  std::cout << "Message length: " << message.length() << std::endl;
+  // std::cout << "Message: " << message << std::endl;
+  // std::cout << "Message length: " << message.length() << std::endl;
 
-  size_t length = signer.SignMessage(rng, (const byte *)message.c_str(),
-                                     message.length(), (byte *)signature);
-  signature.resize(length);
+  // size_t length = signer.SignMessage(rng, (const byte *)message.c_str(),
+  //                                    message.length(), (byte *)signature);
+  // signature.resize(length);
 
-  std::cout << "Original size: " << signature.size() << std::endl;
+  // std::cout << "Original size: " << signature.size() << std::endl;
 
   // std::string encoded;
   // CryptoPP::StringSource ss(signature.data(), signature.size(), true,
@@ -111,18 +111,24 @@ std::string Sign(std::string message, RSA::PrivateKey privkey) {
 
   // std::cout << "Encoded size: " << encoded.size() << std::endl;
 
-  std::string sig((const char *)signature.data(), signature.size());
+  // std::string sig((const char *)signature.data(), signature.size());
 
-  return sig;
+  // return sig;
+
+  // Signing disabled, awaiting a working implementation
+  return "foobar";
 }
 
 bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
   // TODO remove
-  std::cout << "Message: " << message << std::endl;
-  std::cout << "Signature: " << signature.data() << std::endl;
-  std::cout << "Signature size: " << signature.size() << std::endl;
+  // std::cout << "Message: " << message << std::endl;
+  // std::cout << "Signature: " << signature.data() << std::endl;
+  // std::cout << "Signature size: " << signature.size() << std::endl;
 
-  RSASS<PSSR, SHA>::Verifier verifier(pubkey);
+  // This fails saying the public key is too short
+  // TODO learn how signing schemes work
+  // OR just reimplement the entire crypto library with openSSL?
+  // RSASS<PSSR, SHA>::Verifier verifier(pubkey);
 
   // Base64Decoder decoder;
   // decoder.Put((const byte *)signature.data(), signature.size());
@@ -131,19 +137,23 @@ bool Verify(std::string signature, std::string message, RSA::PublicKey pubkey) {
   // byte decoded[size];
   // decoder.Get((byte *)&decoded[0], size);
 
-  SecByteBlock bytes((const byte *)signature.data(), signature.size());
+  // SecByteBlock bytes((const byte *)signature.data(), signature.size());
 
-  std::cout << "Message: " << message << std::endl;
-  std::cout << "Message length: " << message.length() << std::endl;
+  // std::cout << "Message: " << message << std::endl;
+  // std::cout << "Message length: " << message.length() << std::endl;
 
-  std::cout << "Signature: " << bytes.data() << std::endl;
-  std::cout << "Signature size: " << bytes.size() << std::endl;
+  // std::cout << "Signature: " << bytes.data() << std::endl;
+  // std::cout << "Signature size: " << bytes.size() << std::endl;
 
   // TODO figure out why this isn't verifying--
   // message.length and bytes.length match from client to server...
-  bool verified = verifier.VerifyMessage((const byte *)message.c_str(),
-                                         message.length(), bytes, bytes.size());
-  return verified;
+  // bool verified = verifier.VerifyMessage((const byte *)message.c_str(),
+  //                                        message.length(), bytes,
+  //                                        bytes.size());
+  // return verified;
+
+  // Verification disabled, awaiting a working implementation
+  return true;
 }
 
 }  // namespace Crypto
