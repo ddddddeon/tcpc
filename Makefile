@@ -1,6 +1,6 @@
 SERVER_NAME=server
 CLIENT_NAME=client
-LIBS=-lpthread -lcrypto++ -lleveldb
+LIBS=-lpthread -lcrypto -lleveldb
 CFLAGS=-g -Wall -fuse-ld=lld $(LIBS) #-fsanitize=address -fsanitize=memory -fsanitize=thread
 
 CC=clang++
@@ -8,6 +8,8 @@ SERVER_OUTFILE=bin/$(SERVER_NAME)
 CLIENT_OUTFILE=bin/$(CLIENT_NAME)
 SERVER_INFILES=$(wildcard src/$(SERVER_NAME)/*.cpp)
 CLIENT_INFILES=$(wildcard src/$(CLIENT_NAME)/*.cpp)
+TEST_INFILES=$(wildcard test/*.cpp)
+TEST_OUTFILE=bin/test
 SHARED_LIBFILES=$(wildcard src/lib/*.cpp)
 
 .PHONY: default
@@ -23,6 +25,11 @@ $(CLIENT_NAME):
 	set -e; \
 	if [ ! -d bin ]; then mkdir bin; fi; \
 	$(CC) -o $(CLIENT_OUTFILE) $(CLIENT_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
+
+tests:
+	set -e; \
+	if [ ! -d bin ]; then mkdir bin; fi; \
+	$(CC) -o $(TEST_OUTFILE) $(TEST_INFILES) $(SHARED_LIBFILES) $(CFLAGS);
 
 flush: flush-db flush-keys
 
@@ -75,3 +82,7 @@ sloc:
 all: default find-bin install
 
 rebuild: clean default install
+
+test:
+	@./test/bin/test
+
