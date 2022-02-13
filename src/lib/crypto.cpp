@@ -8,6 +8,15 @@
 #include <iostream>
 #include <regex>
 
+#define CHECK(func, msg, handle)                                  \
+  do {                                                            \
+    int ret = (func);                                             \
+    if (ret != 1) {                                               \
+      printf("%s (%s:%d: %s)\n", msg, __FILE__, __LINE__, #func); \
+      handle;                                                     \
+    }                                                             \
+  } while (0)
+
 namespace TCPChat {
 
 namespace Crypto {
@@ -76,53 +85,50 @@ EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
   return key;
 }
 
-std::string GenerateNonce() { return ""; }
-
 unsigned char *Sign(char *message, EVP_PKEY *key) {
   // TODO handle errors
   size_t sig_length;
+
+  // TODO check here
   EVP_MD_CTX *ctx = EVP_MD_CTX_create();
 
-  EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, key);
-  EVP_DigestSignUpdate(ctx, message, strlen(message));
-  EVP_DigestSignFinal(ctx, NULL, &sig_length);
+  CHECK(EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, key),
+        "DigestSignInit failed", return NULL);
+  CHECK(EVP_DigestSignUpdate(ctx, message, strlen(message)),
+        "DigestSignUpdate failed", return NULL);
+  CHECK(EVP_DigestSignFinal(ctx, NULL, &sig_length), "DigestSignFinal failed",
+        return NULL);
 
+  // TODO check here
   unsigned char *sig =
       (unsigned char *)OPENSSL_malloc(sizeof(unsigned char) * sig_length);
 
-  EVP_DigestSignFinal(ctx, sig, &sig_length);
+  CHECK(EVP_DigestSignFinal(ctx, sig, &sig_length), "DigestSignFinal failed",
+        return NULL);
 
   EVP_MD_CTX_free(ctx);
-
   return sig;
 }
 
 bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
   size_t sig_length = 256;
-  // TODO handle errors
+  // TODO check here
   EVP_MD_CTX *ctx = EVP_MD_CTX_create();
-  int ret;
-  ret = EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pubkey);
-  if (ret != 1) {
-    printf("DigestVerifyInit failed\n");
-    return false;
-  }
 
-  ret = EVP_DigestVerifyUpdate(ctx, message, strlen(message));
-  if (ret != 1) {
-    printf("DigestVerifyUpdate failed\n");
+  CHECK(EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pubkey),
+        "DigestVerifyInit failed", return false);
 
-    return false;
-  }
+  CHECK(EVP_DigestVerifyUpdate(ctx, message, strlen(message)),
+        "DigestVerifyUpdate failed", return false);
 
-  ret = EVP_DigestVerifyFinal(ctx, signature, sig_length);
-  if (ret != 1) {
-    printf("DigestVerifyFinal failed\n");
-    return false;
-  }
+  CHECK(EVP_DigestVerifyFinal(ctx, signature, sig_length),
+        "DigestVerifyFinal failed", return false);
 
+  EVP_MD_CTX_free(ctx);
   return true;
 }
+
+std::string GenerateNonce() { return ""; }
 
 std::string StripNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\n"), "?");
