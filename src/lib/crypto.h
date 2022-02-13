@@ -10,8 +10,8 @@ namespace TCPChat {
 namespace Crypto {
 
 EVP_PKEY *GenerateKey();
-void WriteKeyToFile(int key, char *out);
-int LoadKeyFromFile(std::string path);
+void KeyToFile(EVP_PKEY *key, char *out_file, bool is_private);
+int FileToKey(char *in_file, bool is_private);
 unsigned char *KeyToString(EVP_PKEY *privkey, bool is_private);
 EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private);
 std::string GenerateNonce();

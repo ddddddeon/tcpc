@@ -25,6 +25,9 @@ bool test_crypto() {
 
   printf("%s\n", pubkey_string2);
 
+  Crypto::KeyToFile(privkey, "id_rsa", true);
+  Crypto::KeyToFile(privkey, "id_rsa.pub", false);
+
   free(privkey_string);
   free(pubkey_string);
   free(pubkey_string2);

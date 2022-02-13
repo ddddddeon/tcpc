@@ -12,7 +12,6 @@
 #include "../lib/socket.h"
 
 using asio::ip::tcp;
-using CryptoPP::SecByteBlock;
 using std::cout;
 using std::endl;
 using std::flush;
@@ -144,6 +143,8 @@ void Client::ProcessInputChar() {
 
 void Client::GenerateKeyPair() {
   _privkey = Crypto::GenerateKey(KeyPairPath);
+
+  // TODO convert to openssl
   _pubkey = RSA::PublicKey(_privkey);
   _pubkey_string = Crypto::PubKeyToString(_pubkey);
   _pubkey_string = Crypto::StripNewLines(_pubkey_string);
