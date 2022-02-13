@@ -40,15 +40,16 @@ bool test_crypto() {
   printf("%s\n", opened_pubkey_string);
 
   char* message = "chris is cool";
+  printf("Message: %s\n", message);
 
   unsigned char* sig = Crypto::Sign(message, opened_privkey);
-  printf("%s\n", sig);
-  printf("%d\n", strlen((char*)sig));
+  printf("Signed message with private key-- signature: %x\n", sig);
+
+  printf("Verifying message with public key...\n");
 
   bool verified = Crypto::Verify(message, sig, opened_pubkey);
-
   if (verified) {
-    printf("Verified!\n");
+    printf("Verified! Signature is valid for message: %s\n", message);
   } else {
     printf("Not Verified...\n");
   }
