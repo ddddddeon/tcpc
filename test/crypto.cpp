@@ -54,6 +54,23 @@ bool test_crypto() {
     printf("Not Verified...\n");
   }
 
+  unsigned char *sig2 = (unsigned char *) "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf";
+
+  bool verified2 = Crypto::Verify(message, sig2, opened_pubkey);
+  if (verified2) {
+    printf("Verified?! This shouldn't succeed...\n");
+  } else {
+    printf("Not verified using bogus signature-- good!\n");
+  }
+
+  char* message2 = "chris is not cool?";
+  bool verified3 = Crypto::Verify(message2, sig, opened_pubkey);
+  if (verified3) {
+    printf("Verified?! This shouldn't succeed...\n");
+  } else {
+    printf("Not verified using bogus message-- good!\n");
+  }
+
   free(sig);
   free(privkey_string);
   free(pubkey_string);
