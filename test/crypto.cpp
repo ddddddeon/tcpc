@@ -43,7 +43,12 @@ bool test_crypto() {
   printf("Message: %s\n", message);
 
   unsigned char* sig = Crypto::Sign(message, opened_privkey);
-  printf("Signed message with private key-- signature: %x\n", sig);
+  if (sig == NULL) {
+    printf("Could not generate signature!\n");
+    return false;
+  } else {
+    printf("Signed message with private key-- signature: %x\n", sig);
+  }
 
   printf("Verifying message with public key...\n");
 
@@ -52,6 +57,7 @@ bool test_crypto() {
     printf("Verified! Signature is valid for message: %s\n", message);
   } else {
     printf("Not Verified...\n");
+    return false;
   }
 
   unsigned char *sig2 = (unsigned char *) "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf";
@@ -59,6 +65,7 @@ bool test_crypto() {
   bool verified2 = Crypto::Verify(message, sig2, opened_pubkey);
   if (verified2) {
     printf("Verified?! This shouldn't succeed...\n");
+    return false;
   } else {
     printf("Not verified using bogus signature-- good!\n");
   }
@@ -67,6 +74,7 @@ bool test_crypto() {
   bool verified3 = Crypto::Verify(message2, sig, opened_pubkey);
   if (verified3) {
     printf("Verified?! This shouldn't succeed...\n");
+    return false;
   } else {
     printf("Not verified using bogus message-- good!\n");
   }

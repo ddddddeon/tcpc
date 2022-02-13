@@ -8,19 +8,21 @@
 #include <iostream>
 #include <regex>
 
-#define CHECK(func, msg, handle)                                  \
-  do {                                                            \
-    int ret = (func);                                             \
-    if (ret != 1) {                                               \
-      printf("%s (%s:%d: %s)\n", msg, __FILE__, __LINE__, #func); \
-      handle;                                                     \
-    }                                                             \
+#define CHECK_MD(func, retval)                                          \
+  do {                                                                  \
+    int ret = (func);                                                   \
+    if (ret != 1) {                                                     \
+      printf("%s (%s:%d: %s)\n", "Message digest failed at ", __FILE__, \
+             __LINE__, #func);                                          \
+      EVP_MD_CTX_free(ctx);                                             \
+      return retval;                                                    \
+    }                                                                   \
   } while (0)
 
-#define CHECK_NULL(func, msg, handle) \
+#define CHECK_NULL(func, msg, retval) \
   do {                                \
     if ((func) == NULL) {             \
-      handle;                         \
+      return retval;                  \
     }                                 \
   } while (0)
 
@@ -97,21 +99,17 @@ unsigned char *Sign(char *message, EVP_PKEY *key) {
   EVP_MD_CTX *ctx = NULL;
 
   CHECK_NULL(ctx = EVP_MD_CTX_create(), "Could not initialize EVP context",
-             return NULL);
+             NULL);
 
-  CHECK(EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, key),
-        "DigestSignInit failed", return NULL);
-  CHECK(EVP_DigestSignUpdate(ctx, message, strlen(message)),
-        "DigestSignUpdate failed", return NULL);
-  CHECK(EVP_DigestSignFinal(ctx, NULL, &sig_length), "DigestSignFinal failed",
-        return NULL);
+  CHECK_MD(EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, key), NULL);
+  CHECK_MD(EVP_DigestSignUpdate(ctx, message, strlen(message)), NULL);
+  CHECK_MD(EVP_DigestSignFinal(ctx, NULL, &sig_length), NULL);
 
-  // TODO check here
-  unsigned char *sig =
-      (unsigned char *)OPENSSL_malloc(sizeof(unsigned char) * sig_length);
+  unsigned char *sig = NULL;
+  CHECK_NULL(sig = (unsigned char *)malloc(sig_length),
+             "Could not allocate memory for signature", NULL);
 
-  CHECK(EVP_DigestSignFinal(ctx, sig, &sig_length), "DigestSignFinal failed",
-        return NULL);
+  CHECK_MD(EVP_DigestSignFinal(ctx, sig, &sig_length), NULL);
 
   EVP_MD_CTX_free(ctx);
   return sig;
@@ -122,16 +120,11 @@ bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
   EVP_MD_CTX *ctx = NULL;
 
   CHECK_NULL(ctx = EVP_MD_CTX_create(), "Could not initialize EVP context",
-             return false);
+             false);
 
-  CHECK(EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pubkey),
-        "DigestVerifyInit failed", return false);
-
-  CHECK(EVP_DigestVerifyUpdate(ctx, message, strlen(message)),
-        "DigestVerifyUpdate failed", return false);
-
-  CHECK(EVP_DigestVerifyFinal(ctx, signature, sig_length),
-        "DigestVerifyFinal failed", return false);
+  CHECK_MD(EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pubkey), false);
+  CHECK_MD(EVP_DigestVerifyUpdate(ctx, message, strlen(message)), false);
+  CHECK_MD(EVP_DigestVerifyFinal(ctx, signature, sig_length), false);
 
   EVP_MD_CTX_free(ctx);
   return true;
