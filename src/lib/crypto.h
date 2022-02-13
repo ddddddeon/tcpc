@@ -15,7 +15,7 @@ unsigned char *KeyToString(EVP_PKEY *privkey, bool is_private);
 EVP_PKEY *FileToKey(char *in_file, bool is_private);
 EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private);
 std::string GenerateNonce();
-std::string Sign(std::string message, int privkey);
+unsigned char *Sign(char *message, EVP_PKEY *key);
 bool Verify(std::string signature, std::string message, int pubkey);
 std::string StripNewLines(std::string key);
 std::string ExpandNewLines(std::string key);

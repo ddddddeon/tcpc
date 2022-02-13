@@ -39,6 +39,12 @@ bool test_crypto() {
   printf("%s\n", opened_privkey_string);
   printf("%s\n", opened_pubkey_string);
 
+  char* message = "chris is cool";
+
+  unsigned char* sig = Crypto::Sign(message, privkey);
+  printf("%s\n", sig);
+
+  free(sig);
   free(privkey_string);
   free(pubkey_string);
   free(pubkey_string2);

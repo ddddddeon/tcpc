@@ -78,7 +78,23 @@ EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
 
 std::string GenerateNonce() { return ""; }
 
-std::string Sign(std::string message, int key) { return "foobar"; }
+unsigned char *Sign(char *message, EVP_PKEY *key) {
+  EVP_MD_CTX *ctx;
+
+  size_t sig_length;
+
+  ctx = EVP_MD_CTX_create();
+  EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, key);
+  EVP_DigestSignUpdate(ctx, message, strlen(message));
+  EVP_DigestSignFinal(ctx, NULL, &sig_length);
+
+  unsigned char *sig =
+      (unsigned char *)malloc(sizeof(unsigned char) * sig_length);
+
+  EVP_DigestSignFinal(ctx, sig, &sig_length);
+
+  return sig;
+}
 
 bool Verify(std::string signature, std::string message, int pubkey) {
   return true;
