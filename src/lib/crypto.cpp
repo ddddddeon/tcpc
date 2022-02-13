@@ -79,24 +79,48 @@ EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
 std::string GenerateNonce() { return ""; }
 
 unsigned char *Sign(char *message, EVP_PKEY *key) {
-  EVP_MD_CTX *ctx;
-
   size_t sig_length;
+  EVP_MD_CTX *ctx = EVP_MD_CTX_create();
 
-  ctx = EVP_MD_CTX_create();
   EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, key);
   EVP_DigestSignUpdate(ctx, message, strlen(message));
   EVP_DigestSignFinal(ctx, NULL, &sig_length);
 
-  unsigned char *sig =
-      (unsigned char *)malloc(sizeof(unsigned char) * sig_length);
+  unsigned char *sig = (unsigned char *)malloc(sig_length);
 
   EVP_DigestSignFinal(ctx, sig, &sig_length);
+
+  // RSA_sign(0, (unsigned char *)message, strlen(message), sig, )
+
+  EVP_MD_CTX_free(ctx);
 
   return sig;
 }
 
-bool Verify(std::string signature, std::string message, int pubkey) {
+bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
+  size_t sig_length = strlen((char *)signature);
+  EVP_MD_CTX *ctx = EVP_MD_CTX_create();
+
+  int ret;
+  ret = EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pubkey);
+  if (ret != 1) {
+    printf("DigestVerifyInit failed\n");
+    return false;
+  }
+
+  ret = EVP_DigestVerifyUpdate(ctx, message, strlen(message));
+  if (ret != 1) {
+    printf("DigestVerifyUpdate failed\n");
+
+    return false;
+  }
+
+  ret = EVP_DigestVerifyFinal(ctx, signature, sig_length);
+  if (ret != 1) {
+    printf("DigestVerifyFinal failed\n");
+    return false;
+  }
+
   return true;
 }
 

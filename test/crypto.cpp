@@ -20,8 +20,8 @@ bool test_crypto() {
   printf("%s\n", pubkey_string);
   printf("%d\n", strlen((const char*)pubkey_string));
 
-  EVP_PKEY* pubkey2 = Crypto::StringToKey(pubkey_string, false);
-  unsigned char* pubkey_string2 = Crypto::KeyToString(pubkey2, false);
+  EVP_PKEY* pubkey = Crypto::StringToKey(pubkey_string, false);
+  unsigned char* pubkey_string2 = Crypto::KeyToString(pubkey, false);
 
   printf("%s\n", pubkey_string2);
 
@@ -41,8 +41,17 @@ bool test_crypto() {
 
   char* message = "chris is cool";
 
-  unsigned char* sig = Crypto::Sign(message, privkey);
+  unsigned char* sig = Crypto::Sign(message, opened_privkey);
   printf("%s\n", sig);
+  printf("%d\n", strlen((char*)sig));
+
+  bool verified = Crypto::Verify(message, sig, opened_pubkey);
+
+  if (verified) {
+    printf("Verified!\n");
+  } else {
+    printf("Not Verified...\n");
+  }
 
   free(sig);
   free(privkey_string);
