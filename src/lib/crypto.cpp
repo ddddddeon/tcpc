@@ -32,7 +32,7 @@ void SetKey(BIO *bio, EVP_PKEY *key, bool is_private) {
   }
 }
 
-EVP_PKEY *GetKey(BIO *bio, unsigned char *key_string, bool is_private) {
+EVP_PKEY *GetKey(BIO *bio, bool is_private) {
   RSA *rsa = NULL;
   if (is_private) {
     PEM_read_bio_RSAPrivateKey(bio, &rsa, NULL, NULL);
@@ -48,33 +48,30 @@ EVP_PKEY *GetKey(BIO *bio, unsigned char *key_string, bool is_private) {
 
 void KeyToFile(EVP_PKEY *key, char *out_file, bool is_private) {
   BIO *file_BIO = BIO_new_file(out_file, "w");
-
   SetKey(file_BIO, key, is_private);
   BIO_free(file_BIO);
-  free(key_string);
 }
 
 unsigned char *KeyToString(EVP_PKEY *key, bool is_private) {
   BIO *key_BIO = BIO_new(BIO_s_mem());
   SetKey(key_BIO, key, is_private);
   int key_length = BIO_pending(key_BIO);
-  unsigned char *key_string = (unsigned char *)malloc(key_length);
+  unsigned char *key_string = (unsigned char *)malloc(key_length + 1);
   BIO_read(key_BIO, key_string, key_length);
   BIO_free(key_BIO);
   return key_string;
 }
 
-int FileToKey(char *in_file, bool is_private) {
-  // BIO *file_BIO = BIO_new_file(in_file, "rw");
-
-  // EVP_PKEY *key = GetKey(file_BIO, , is_private);
-
-  return 0;
+EVP_PKEY *FileToKey(char *in_file, bool is_private) {
+  BIO *file_BIO = BIO_new_file(in_file, "rw");
+  EVP_PKEY *key = GetKey(file_BIO, is_private);
+  BIO_free(file_BIO);
+  return key;
 }
 
 EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
   BIO *key_BIO = BIO_new_mem_buf(key_string, -1);
-  EVP_PKEY *key = GetKey(key_BIO, key_string, is_private);
+  EVP_PKEY *key = GetKey(key_BIO, is_private);
   BIO_free(key_BIO);
   return key;
 }

@@ -11,8 +11,8 @@ namespace Crypto {
 
 EVP_PKEY *GenerateKey();
 void KeyToFile(EVP_PKEY *key, char *out_file, bool is_private);
-int FileToKey(char *in_file, bool is_private);
 unsigned char *KeyToString(EVP_PKEY *privkey, bool is_private);
+EVP_PKEY *FileToKey(char *in_file, bool is_private);
 EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private);
 std::string GenerateNonce();
 std::string Sign(std::string message, int privkey);

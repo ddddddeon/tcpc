@@ -28,6 +28,17 @@ bool test_crypto() {
   Crypto::KeyToFile(privkey, "id_rsa", true);
   Crypto::KeyToFile(privkey, "id_rsa.pub", false);
 
+  EVP_PKEY* opened_privkey = Crypto::FileToKey("./id_rsa", true);
+  EVP_PKEY* opened_pubkey = Crypto::FileToKey("./id_rsa.pub", false);
+
+  unsigned char* opened_privkey_string =
+      Crypto::KeyToString(opened_privkey, true);
+  unsigned char* opened_pubkey_string =
+      Crypto::KeyToString(opened_pubkey, false);
+
+  printf("%s\n", opened_privkey_string);
+  printf("%s\n", opened_pubkey_string);
+
   free(privkey_string);
   free(pubkey_string);
   free(pubkey_string2);
