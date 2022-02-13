@@ -147,7 +147,7 @@ void Client::GenerateKeyPair() {
   // TODO convert to openssl
   _pubkey = RSA::PublicKey(_privkey);
   _pubkey_string = Crypto::PubKeyToString(_pubkey);
-  _pubkey_string = Crypto::StripNewLines(_pubkey_string);
+  _pubkey_string = Socket::StripNewLines(_pubkey_string);
   _logger.Info("Generated Keypair in " + KeyPairPath);
 }
 
@@ -163,7 +163,7 @@ bool Client::LoadKeyPair(std::string path) {
     _pubkey.Load(pubkey_bytes);
 
     _pubkey_string = Crypto::PubKeyToString(_pubkey);
-    _pubkey_string = Crypto::StripNewLines(_pubkey_string);
+    _pubkey_string = Socket::StripNewLines(_pubkey_string);
 
     return true;
   } catch (std::exception &e) {

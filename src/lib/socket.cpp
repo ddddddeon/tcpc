@@ -34,6 +34,14 @@ bool ParseVerifyMessage(std::string &message) {
   return false;
 }
 
+std::string StripNewLines(std::string key) {
+  return std::regex_replace(key, std::regex("\n"), "?");
+}
+
+std::string ExpandNewLines(std::string key) {
+  return std::regex_replace(key, std::regex("\\?"), "\n");
+}
+
 }  // namespace Socket
 
 }  // namespace TCPChat

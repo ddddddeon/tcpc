@@ -21,8 +21,6 @@ EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private);
 unsigned char *Sign(char *message, EVP_PKEY *key);
 bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey);
 unsigned char *GenerateNonce();
-unsigned char *StripNewLines(unsigned char *key);
-unsigned char *ExpandNewLines(unsigned char *key);
 
 #ifdef __cplusplus
 }  // namespace Crypto

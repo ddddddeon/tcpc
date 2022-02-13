@@ -140,7 +140,7 @@ std::string Server::SetUser(std::string name, std::string message,
     show_entered_message = false;
   } else {
     std::string match = key_match.str();
-    pubkey_string = Crypto::ExpandNewLines(match);
+    pubkey_string = Socket::ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
 
