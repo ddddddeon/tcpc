@@ -17,20 +17,16 @@ bool test_crypto() {
 
   unsigned char* privkey_string = Crypto::KeyToString(privkey, true);
   assert(privkey_string != NULL);
-  printf("%s\n", privkey_string);
-  printf("%d\n", strlen((const char*)privkey_string));
 
   unsigned char* pubkey_string = Crypto::KeyToString(privkey, false);
   assert(pubkey_string != NULL);
-  printf("%s\n", pubkey_string);
-  printf("%d\n", strlen((const char*)pubkey_string));
 
   EVP_PKEY* pubkey = Crypto::StringToKey(pubkey_string, false);
   assert(pubkey != NULL);
 
   unsigned char* pubkey_string2 = Crypto::KeyToString(pubkey, false);
   assert(pubkey_string2 != NULL);
-  printf("%s\n", pubkey_string2);
+  assert(strcmp((char*)pubkey_string, (char*)pubkey_string2) == 0);
 
   assert(Crypto::KeyToFile(privkey, "id_rsa", true));
   assert(Crypto::KeyToFile(privkey, "id_rsa.pub", false));
@@ -48,6 +44,8 @@ bool test_crypto() {
 
   assert(opened_privkey_string != NULL);
   assert(opened_pubkey_string != NULL);
+  assert(strcmp((char*)privkey_string, (char*)opened_privkey_string) == 0);
+  assert(strcmp((char*)pubkey_string, (char*)opened_pubkey_string) == 0);
 
   printf("%s\n", opened_privkey_string);
   printf("%s\n", opened_pubkey_string);
