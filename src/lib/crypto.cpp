@@ -8,31 +8,37 @@
 #include <iostream>
 #include <regex>
 
-#define CHECK_MD(func, retval)                                          \
-  do {                                                                  \
-    int ret = (func);                                                   \
-    if (ret != 1) {                                                     \
-      printf("%s (%s:%d: %s)\n", "Message digest failed at ", __FILE__, \
-             __LINE__, #func);                                          \
-      EVP_MD_CTX_free(ctx);                                             \
-      return retval;                                                    \
-    }                                                                   \
+#define CHECK_MD(func, retval) \
+  CHECK_EQUALS(1, func, EVP_MD_CTX_free(ctx); return retval)
+
+#define CHECK_EQUALS(val, func, handle)                                  \
+  do {                                                                   \
+    int ret = (func);                                                    \
+    if (ret != val) {                                                    \
+      printf("%s (%s:%d: %s)\n", "Error at", __FILE__, __LINE__, #func); \
+      handle;                                                            \
+    }                                                                    \
   } while (0)
 
-#define CHECK_NULL(func, msg, retval) \
-  do {                                \
-    if ((func) == NULL) {             \
-      return retval;                  \
-    }                                 \
+#define CHECK_NULL(func, message, retval)                             \
+  do {                                                                \
+    if ((func) == NULL) {                                             \
+      printf("%s (%s:%d: %s)\n", message, __FILE__, __LINE__, #func); \
+      return retval;                                                  \
+    }                                                                 \
   } while (0)
 
+#ifdef __cplusplus
 namespace TCPChat {
 
 namespace Crypto {
+#endif
 
 EVP_PKEY *GenerateKey() {
-  EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-  EVP_PKEY_keygen_init(ctx);
+  EVP_PKEY_CTX *ctx = NULL;
+  CHECK_NULL(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL),
+             "Could not create EVP_PKEY context", NULL);
+  CHECK_EQUALS(1, EVP_PKEY_keygen_init(ctx), return NULL);
   EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048);
 
   EVP_PKEY *key = NULL;
@@ -42,23 +48,29 @@ EVP_PKEY *GenerateKey() {
   return key;
 }
 
-void SetKey(BIO *bio, EVP_PKEY *key, bool is_private) {
+bool SetKey(BIO *bio, EVP_PKEY *key, bool is_private) {
   if (is_private) {
-    PEM_write_bio_PrivateKey(bio, key, NULL, NULL, 0, 0, NULL);
+    CHECK_EQUALS(1, PEM_write_bio_PrivateKey(bio, key, NULL, NULL, 0, 0, NULL),
+                 return false);
   } else {
-    PEM_write_bio_PUBKEY(bio, key);
+    CHECK_EQUALS(1, PEM_write_bio_PUBKEY(bio, key), return false);
   }
+
+  return true;
 }
 
 EVP_PKEY *GetKey(BIO *bio, bool is_private) {
   RSA *rsa = NULL;
   if (is_private) {
-    PEM_read_bio_RSAPrivateKey(bio, &rsa, NULL, NULL);
+    CHECK_NULL(PEM_read_bio_RSAPrivateKey(bio, &rsa, NULL, NULL),
+               "Could not read private key from BIO", NULL);
   } else {
-    PEM_read_bio_RSA_PUBKEY(bio, &rsa, NULL, NULL);
+    CHECK_NULL(PEM_read_bio_RSA_PUBKEY(bio, &rsa, NULL, NULL),
+               "Could not read public key from BIO", NULL);
   }
 
-  EVP_PKEY *key = EVP_PKEY_new();
+  EVP_PKEY *key = NULL;
+  CHECK_NULL(key = EVP_PKEY_new(), "Could not allocat EVP_PKEY", NULL);
   EVP_PKEY_assign_RSA(key, rsa);
 
   return key;
@@ -130,6 +142,7 @@ bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
   return true;
 }
 
+// TODO don't use STL here
 std::string GenerateNonce() { return ""; }
 
 std::string StripNewLines(std::string key) {
@@ -140,6 +153,8 @@ std::string ExpandNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\\?"), "\n");
 }
 
+#ifdef __cplusplus
 }  // namespace Crypto
 
 }  // namespace TCPChat
+#endif
