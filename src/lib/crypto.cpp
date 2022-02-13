@@ -3,13 +3,10 @@
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
-#include <string.h>
 
 #include <iostream>
 #include <regex>
-
-#define CHECK_MD(func, retval) \
-  CHECK_EQUALS(1, func, EVP_MD_CTX_free(ctx); return retval)
+#include <string>
 
 #define CHECK_EQUALS(val, func, handle)                                  \
   do {                                                                   \
@@ -28,7 +25,8 @@
     }                                                                 \
   } while (0)
 
-#define CHECK_NULL_VALUE()
+#define CHECK_MD(func, retval) \
+  CHECK_EQUALS(1, func, EVP_MD_CTX_free(ctx); return retval)
 
 #ifdef __cplusplus
 namespace TCPChat {
@@ -172,14 +170,18 @@ bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
 }
 
 // TODO don't use STL here
-std::string GenerateNonce() { return ""; }
+unsigned char *GenerateNonce() { return (unsigned char *)""; }
 
-std::string StripNewLines(std::string key) {
-  return std::regex_replace(key, std::regex("\n"), "?");
+unsigned char *StripNewLines(unsigned char *key) {
+  return (unsigned char *)std::regex_replace(std::string((char *)key),
+                                             std::regex("\n"), "?")
+      .c_str();
 }
 
-std::string ExpandNewLines(std::string key) {
-  return std::regex_replace(key, std::regex("\\?"), "\n");
+unsigned char *ExpandNewLines(unsigned char *key) {
+  return (unsigned char *)std::regex_replace(std::string((char *)key),
+                                             std::regex("\\?"), "\n")
+      .c_str();
 }
 
 #ifdef __cplusplus

@@ -1,5 +1,6 @@
 #include "../src/lib/crypto.h"
 
+#include <assert.h>
 #include <openssl/evp.h>
 #include <string.h>
 
@@ -12,37 +13,41 @@ namespace TCPChat {
 
 bool test_crypto() {
   EVP_PKEY* privkey = Crypto::GenerateKey();
+  assert(privkey != NULL);
+
   unsigned char* privkey_string = Crypto::KeyToString(privkey, true);
+  assert(privkey_string != NULL);
   printf("%s\n", privkey_string);
   printf("%d\n", strlen((const char*)privkey_string));
 
   unsigned char* pubkey_string = Crypto::KeyToString(privkey, false);
+  assert(pubkey_string != NULL);
   printf("%s\n", pubkey_string);
   printf("%d\n", strlen((const char*)pubkey_string));
 
   EVP_PKEY* pubkey = Crypto::StringToKey(pubkey_string, false);
-  unsigned char* pubkey_string2 = Crypto::KeyToString(pubkey, false);
+  assert(pubkey != NULL);
 
+  unsigned char* pubkey_string2 = Crypto::KeyToString(pubkey, false);
+  assert(pubkey_string2 != NULL);
   printf("%s\n", pubkey_string2);
 
-  if (!Crypto::KeyToFile(privkey, "id_rsa", true)) {
-    return false;
-  }
-  if (!Crypto::KeyToFile(privkey, "id_rsa.pub", false)) {
-    return false;
-  }
+  assert(Crypto::KeyToFile(privkey, "id_rsa", true));
+  assert(Crypto::KeyToFile(privkey, "id_rsa.pub", false));
 
   EVP_PKEY* opened_privkey = Crypto::FileToKey("./id_rsa", true);
   EVP_PKEY* opened_pubkey = Crypto::FileToKey("./id_rsa.pub", false);
 
-  if (opened_privkey == NULL || opened_pubkey == NULL) {
-    return false;
-  }
+  assert(opened_privkey != NULL);
+  assert(opened_pubkey != NULL);
 
   unsigned char* opened_privkey_string =
       Crypto::KeyToString(opened_privkey, true);
   unsigned char* opened_pubkey_string =
       Crypto::KeyToString(opened_pubkey, false);
+
+  assert(opened_privkey_string != NULL);
+  assert(opened_pubkey_string != NULL);
 
   printf("%s\n", opened_privkey_string);
   printf("%s\n", opened_pubkey_string);
