@@ -2,6 +2,7 @@
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
+#include <openssl/rsa.h>
 #include <string.h>
 
 #include <iostream>
@@ -45,7 +46,21 @@ unsigned char *KeyToString(EVP_PKEY *key, bool is_private) {
   return key_string;
 }
 
-int StringToPubKey(std::string pubkey_string) {}
+// caller must free()
+EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
+  BIO *key_BIO = BIO_new_mem_buf(key_string, -1);
+  RSA *rsa = NULL;
+  if (is_private) {
+    PEM_read_bio_RSAPrivateKey(key_BIO, &rsa, NULL, NULL);
+  } else {
+    PEM_read_bio_RSA_PUBKEY(key_BIO, &rsa, NULL, NULL);
+  }
+
+  EVP_PKEY *key = EVP_PKEY_new();
+  EVP_PKEY_assign_RSA(key, rsa);
+
+  return key;
+}
 
 std::string GenerateNonce() { return ""; }
 

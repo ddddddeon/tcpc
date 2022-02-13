@@ -20,12 +20,14 @@ bool test_crypto() {
   printf("%s\n", pubkey_string);
   printf("%d\n", strlen((const char*)pubkey_string));
 
-  memset(privkey_string, 0, strlen((char*)privkey_string));
+  EVP_PKEY* pubkey2 = Crypto::StringToKey(pubkey_string, false);
+  unsigned char* pubkey_string2 = Crypto::KeyToString(pubkey2, false);
+
+  printf("%s\n", pubkey_string2);
+
   free(privkey_string);
-
-  memset(pubkey_string, 0, strlen((char*)pubkey_string));
   free(pubkey_string);
-
+  free(pubkey_string2);
   EVP_PKEY_free(privkey);
 
   return true;
