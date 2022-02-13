@@ -109,16 +109,24 @@ unsigned char *KeyToString(EVP_PKEY *key, bool is_private) {
 }
 
 EVP_PKEY *FileToKey(char *in_file, bool is_private) {
-  BIO *file_BIO = BIO_new_file(in_file, "rw");
-  EVP_PKEY *key = GetKey(file_BIO, is_private);
+  BIO *file_BIO = NULL;
+  file_BIO = BIO_new_file(in_file, "r");
+  CHECK_NULL(file_BIO, "Could not open file for reading", NULL);
+  EVP_PKEY *key = NULL;
+  key = GetKey(file_BIO, is_private);
   BIO_free(file_BIO);
+  CHECK_NULL(key, "Could not get key from file", NULL);
   return key;
 }
 
 EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
-  BIO *key_BIO = BIO_new_mem_buf(key_string, -1);
-  EVP_PKEY *key = GetKey(key_BIO, is_private);
+  BIO *key_BIO = NULL;
+  key_BIO = BIO_new_mem_buf(key_string, -1);
+  CHECK_NULL(key_BIO, "Could not allocate memory buffer for string", NULL);
+  EVP_PKEY *key = NULL;
+  key = GetKey(key_BIO, is_private);
   BIO_free(key_BIO);
+  CHECK_NULL(key, "Could not get key from string", NULL);
   return key;
 }
 
