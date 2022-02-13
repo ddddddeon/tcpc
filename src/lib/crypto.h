@@ -1,16 +1,18 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
 
+#include <openssl/evp.h>
+
 #include <string>
 
 namespace TCPChat {
 
 namespace Crypto {
 
-int GenerateKey(std::string path);
+EVP_PKEY *GenerateKey();
 void WriteKeyToFile(int key, char *out);
 int LoadKeyFromFile(std::string path);
-std::string PubKeyToString(int pubkey);
+unsigned char *KeyToString(EVP_PKEY *privkey, bool priv);
 int StringToPubKey(std::string pubkey_string);
 std::string GenerateNonce();
 std::string Sign(std::string message, int privkey);

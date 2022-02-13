@@ -83,6 +83,3 @@ all: default find-bin install
 
 rebuild: clean default install
 
-test:
-	@./test/bin/test
-
