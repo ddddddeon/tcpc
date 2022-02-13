@@ -17,6 +17,13 @@
     }                                                             \
   } while (0)
 
+#define CHECK_NULL(func, msg, handle) \
+  do {                                \
+    if ((func) == NULL) {             \
+      handle;                         \
+    }                                 \
+  } while (0)
+
 namespace TCPChat {
 
 namespace Crypto {
@@ -86,11 +93,11 @@ EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
 }
 
 unsigned char *Sign(char *message, EVP_PKEY *key) {
-  // TODO handle errors
   size_t sig_length;
+  EVP_MD_CTX *ctx = NULL;
 
-  // TODO check here
-  EVP_MD_CTX *ctx = EVP_MD_CTX_create();
+  CHECK_NULL(ctx = EVP_MD_CTX_create(), "Could not initialize EVP context",
+             return NULL);
 
   CHECK(EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, key),
         "DigestSignInit failed", return NULL);
@@ -112,8 +119,10 @@ unsigned char *Sign(char *message, EVP_PKEY *key) {
 
 bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
   size_t sig_length = 256;
-  // TODO check here
-  EVP_MD_CTX *ctx = EVP_MD_CTX_create();
+  EVP_MD_CTX *ctx = NULL;
+
+  CHECK_NULL(ctx = EVP_MD_CTX_create(), "Could not initialize EVP context",
+             return false);
 
   CHECK(EVP_DigestVerifyInit(ctx, NULL, EVP_sha256(), NULL, pubkey),
         "DigestVerifyInit failed", return false);

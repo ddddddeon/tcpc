@@ -72698,7 +72698,7 @@ namespace __detail
 # 259 "/usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/regex_executor.h" 2 3
 # 64 "/usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/regex" 2 3
 # 10 "src/lib/crypto.cpp" 2
-# 20 "src/lib/crypto.cpp"
+# 26 "src/lib/crypto.cpp"
 namespace TCPChat {
 
 namespace Crypto {
@@ -72769,20 +72769,28 @@ EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private) {
 
 unsigned char *Sign(char *message, EVP_PKEY *key) {
 
+  EVP_MD_CTX *ctx = __null;
   size_t sig_length;
-  EVP_MD_CTX *ctx = EVP_MD_CTX_new();
 
-  EVP_DigestSignInit(ctx, __null, EVP_sha256(), __null, key);
-  EVP_DigestUpdate(ctx,message,strlen(message));
-  EVP_DigestSignFinal(ctx, __null, &sig_length);
+
+  ctx = do { int ret = (EVP_MD_CTX_new()); if (ret == __null) { printf("%s (%s:%d: %s)\n", "Could not initialize EVP context", "src/lib/crypto.cpp", 101, "EVP_MD_CTX_new()"); return __null; } else { return ret; } } while (0);
+
+
+  do { int ret = (EVP_DigestSignInit(ctx, __null, EVP_sha256(), __null, key)); if (ret != 1) { printf("%s (%s:%d: %s)\n", "DigestSignInit failed", "src/lib/crypto.cpp", 104, "EVP_DigestSignInit(ctx, __null, EVP_sha256(), __null, key)"); return __null; } else { return ret; } } while (0);
+
+  do { int ret = (EVP_DigestUpdate(ctx,message,strlen(message))); if (ret != 1) { printf("%s (%s:%d: %s)\n", "DigestSignUpdate failed", "src/lib/crypto.cpp", 106, "EVP_DigestUpdate(ctx,message,strlen(message))"); return __null; } else { return ret; } } while (0);
+
+  do { int ret = (EVP_DigestSignFinal(ctx, __null, &sig_length)); if (ret != 1) { printf("%s (%s:%d: %s)\n", "DigestSignFinal failed", "src/lib/crypto.cpp", 108, "EVP_DigestSignFinal(ctx, __null, &sig_length)"); return __null; } else { return ret; } } while (0);
+
+
 
   unsigned char *sig =
-      (unsigned char *)CRYPTO_malloc(sizeof(unsigned char) * sig_length, "src/lib/crypto.cpp", 98);
+      (unsigned char *)CRYPTO_malloc(sizeof(unsigned char) * sig_length, "src/lib/crypto.cpp", 112);
 
-  EVP_DigestSignFinal(ctx, sig, &sig_length);
+  do { int ret = (EVP_DigestSignFinal(ctx, sig, &sig_length)); if (ret != 1) { printf("%s (%s:%d: %s)\n", "DigestSignFinal failed", "src/lib/crypto.cpp", 115, "EVP_DigestSignFinal(ctx, sig, &sig_length)"); return __null; } else { return ret; } } while (0);
+
 
   EVP_MD_CTX_free(ctx);
-
   return sig;
 }
 
@@ -72790,22 +72798,17 @@ bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
   size_t sig_length = 256;
 
   EVP_MD_CTX *ctx = EVP_MD_CTX_new();
-  int ret;
-  ret = EVP_DigestVerifyInit(ctx, __null, EVP_sha256(), __null, pubkey);
-  if (ret != 1) {
-    printf("DigestVerifyInit failed\n");
-    return false;
-  }
 
-  ret = EVP_DigestUpdate(ctx,message,strlen(message));
-  if (ret != 1) {
-    printf("DigestVerifyUpdate failed\n");
-    return false;
-  }
-
-  do { int ret = (EVP_DigestVerifyFinal(ctx, signature, sig_length)); if (ret != 1) { printf("%s (%s:%s: %s)\n", "DigestVerifyFinal failed", "src/lib/crypto.cpp", 125, "EVP_DigestVerifyFinal(ctx, signature, sig_length)"); return false; } } while (0);
+  do { int ret = (EVP_DigestVerifyInit(ctx, __null, EVP_sha256(), __null, pubkey)); if (ret != 1) { printf("%s (%s:%d: %s)\n", "DigestVerifyInit failed", "src/lib/crypto.cpp", 127, "EVP_DigestVerifyInit(ctx, __null, EVP_sha256(), __null, pubkey)"); return false; } else { return ret; } } while (0);
 
 
+  do { int ret = (EVP_DigestUpdate(ctx,message,strlen(message))); if (ret != 1) { printf("%s (%s:%d: %s)\n", "DigestVerifyUpdate failed", "src/lib/crypto.cpp", 130, "EVP_DigestUpdate(ctx,message,strlen(message))"); return false; } else { return ret; } } while (0);
+
+
+  do { int ret = (EVP_DigestVerifyFinal(ctx, signature, sig_length)); if (ret != 1) { printf("%s (%s:%d: %s)\n", "DigestVerifyFinal failed", "src/lib/crypto.cpp", 133, "EVP_DigestVerifyFinal(ctx, signature, sig_length)"); return false; } else { return ret; } } while (0);
+
+
+  EVP_MD_CTX_free(ctx);
   return true;
 }
 
