@@ -2,6 +2,7 @@
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 #include <openssl/rsa.h>
 
 #include <iostream>
@@ -169,19 +170,17 @@ bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
   return true;
 }
 
-// TODO don't use STL here
-unsigned char *GenerateNonce() { return (unsigned char *)""; }
+// TODO generate an AES key instead, and encrypt/decrypt instead of sign/verify
+unsigned char *GenerateNonce(int string_length) {
+  int size = string_length + 1;
+  unsigned char *bytes =
+      (unsigned char *)malloc(sizeof(unsigned char) * (size));
+  CHECK_NULL(bytes, "Could not allocate memory for random bytes", NULL);
+  int written = RAND_bytes(bytes, sizeof(unsigned char *) * (size));
+  CHECK_EQUALS(1, written, return NULL);
+  bytes[size - 1] = '\0';
 
-unsigned char *StripNewLines(unsigned char *key) {
-  return (unsigned char *)std::regex_replace(std::string((char *)key),
-                                             std::regex("\n"), "?")
-      .c_str();
-}
-
-unsigned char *ExpandNewLines(unsigned char *key) {
-  return (unsigned char *)std::regex_replace(std::string((char *)key),
-                                             std::regex("\\?"), "\n")
-      .c_str();
+  return bytes;
 }
 
 #ifdef __cplusplus

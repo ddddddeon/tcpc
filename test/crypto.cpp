@@ -90,6 +90,24 @@ bool test_crypto() {
     printf("Not verified using bogus message-- good!\n");
   }
 
+  int nonce_length = 32;
+  unsigned char* nonce = Crypto::GenerateNonce(nonce_length);
+  assert(nonce != NULL);
+  for (int i = 0; i <= nonce_length; i++) {
+    printf("%x", (char*)nonce[i]);
+  }
+  printf("\n");
+
+  unsigned char* nonce2 = Crypto::GenerateNonce(nonce_length);
+  assert(nonce != NULL);
+  assert(strcmp((char*)nonce2, (char*)nonce) != 0);
+
+  for (int i = 0; i <= nonce_length; i++) {
+    printf("%x", (char*)nonce2[i]);
+  }
+  printf("\n");
+
+  free(nonce);
   free(sig);
   free(privkey_string);
   free(pubkey_string);
