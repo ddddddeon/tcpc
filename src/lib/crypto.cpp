@@ -171,12 +171,10 @@ bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey) {
 }
 
 // TODO generate an AES key instead, and encrypt/decrypt instead of sign/verify
-unsigned char *GenerateNonce(int string_length) {
-  int size = string_length + 1;
-  unsigned char *bytes =
-      (unsigned char *)malloc(sizeof(unsigned char) * (size));
+unsigned char *GenerateRandomBytes(int size) {
+  unsigned char *bytes = (unsigned char *)malloc(size);
   CHECK_NULL(bytes, "Could not allocate memory for random bytes", NULL);
-  int written = RAND_bytes(bytes, sizeof(unsigned char *) * (size));
+  int written = RAND_bytes(bytes, size);
   CHECK_EQUALS(1, written, return NULL);
   bytes[size - 1] = '\0';
 

@@ -220,15 +220,17 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     RSA::PublicKey pubkey = Crypto::StringToPubKey(pubkey_string);
     connection.PubKey = pubkey;
 
-    // TODO generate a random nonce
-    std::string nonce = Crypto::GenerateNonce();
-    _logger.Info("Generated nonce: " + nonce);
+    int length = 32;
+    unsigned char *bytes = Crypto::GenerateRandomBytes(length);
+    std::string byte_string = std::string((char *)bytes);
 
-    Socket::Send(connection.Socket, "/verify " + nonce + "\r\n");
+    _logger.Info("Generated nonce: " + byte_string);
+
+    Socket::Send(connection.Socket, "/verify " + byte_string + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
 
     if (Socket::ParseVerifyMessage(response)) {
-      bool verified = Crypto::Verify(response, nonce, pubkey);
+      bool verified = Crypto::Verify(response, byte_string, pubkey);
       if (!verified) {
         return false;
       }

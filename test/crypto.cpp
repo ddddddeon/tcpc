@@ -1,6 +1,7 @@
 #include "../src/lib/crypto.h"
 
 #include <assert.h>
+#include <malloc.h>
 #include <openssl/evp.h>
 #include <string.h>
 
@@ -90,24 +91,28 @@ bool test_crypto() {
     printf("Not verified using bogus message-- good!\n");
   }
 
-  int nonce_length = 32;
-  unsigned char* nonce = Crypto::GenerateNonce(nonce_length);
-  assert(nonce != NULL);
-  for (int i = 0; i <= nonce_length; i++) {
-    printf("%x", (char*)nonce[i]);
+  int bytes_length = 32;
+  unsigned char* bytes = NULL;
+  bytes = Crypto::GenerateRandomBytes(bytes_length);
+  assert(bytes != NULL);
+  for (int i = 0; i < bytes_length; i++) {
+    printf("%x", (char*)bytes[i]);
   }
   printf("\n");
 
-  unsigned char* nonce2 = Crypto::GenerateNonce(nonce_length);
-  assert(nonce != NULL);
-  assert(strcmp((char*)nonce2, (char*)nonce) != 0);
+  unsigned char* bytes2 = NULL;
+  bytes2 = Crypto::GenerateRandomBytes(bytes_length);
+  assert(bytes2 != NULL);
 
-  for (int i = 0; i <= nonce_length; i++) {
-    printf("%x", (char*)nonce2[i]);
+  assert(strcmp((char*)bytes2, (char*)bytes) != 0);
+
+  for (int i = 0; i < bytes_length; i++) {
+    printf("%x", (char*)bytes2[i]);
   }
   printf("\n");
 
-  free(nonce);
+  free(bytes2);
+  free(bytes);
   free(sig);
   free(privkey_string);
   free(pubkey_string);
