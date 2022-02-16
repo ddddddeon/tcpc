@@ -27,7 +27,7 @@ $(CLIENT_NAME):
 	$(CC) -o $(CLIENT_OUTFILE) $(CLIENT_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
 
 tests:
-	set -e; \
+	@set -e; \
 	if [ ! -d bin ]; then mkdir bin; fi; \
 	$(CC) -o $(TEST_OUTFILE) $(TEST_INFILES) $(SHARED_LIBFILES) $(CFLAGS);
 
@@ -65,7 +65,7 @@ lint:
 check: check-$(SERVER_NAME) check-$(CLIENT_NAME)
 
 check-$(SERVER_NAME):
-	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./bin/$(SERVER_NAME)
+	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./bin/$(SERVER_NAME);
 
 trace-$(SERVER_NAME):
 	@strace ./bin/$(SERVER_NAME)
