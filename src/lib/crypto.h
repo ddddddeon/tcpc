@@ -1,34 +1,31 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
 
-#include <crypto++/base64.h>
-#include <crypto++/files.h>
-#include <crypto++/filters.h>
-#include <crypto++/osrng.h>
-#include <crypto++/pssr.h>
-#include <crypto++/rsa.h>
-#include <crypto++/secblock.h>
+#include <openssl/evp.h>
 
-#include <string>
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
 
+#ifdef __cplusplus
 namespace TCPChat {
 
 namespace Crypto {
+#endif
 
-CryptoPP::RSA::PrivateKey GenerateKey(std::string path);
-void WriteKeyToFile(CryptoPP::RSAFunction &key, char *out);
-CryptoPP::ByteQueue LoadKeyFromFile(std::string path);
-CryptoPP::RSA::PublicKey StringToPubKey(std::string pubkey_string);
-std::string PubKeyToString(CryptoPP::RSA::PublicKey pubkey);
-std::string StripNewLines(std::string key);
-std::string ExpandNewLines(std::string key);
-std::string GenerateNonce();
-std::string Sign(std::string message, CryptoPP::RSA::PrivateKey privkey);
-bool Verify(std::string signature, std::string message,
-            CryptoPP::RSA::PublicKey pubkey);
+EVP_PKEY *GenerateKey();
+bool KeyToFile(EVP_PKEY *key, char *out_file, bool is_private);
+unsigned char *KeyToString(EVP_PKEY *privkey, bool is_private);
+EVP_PKEY *FileToKey(char *in_file, bool is_private);
+EVP_PKEY *StringToKey(unsigned char *key_string, bool is_private);
+unsigned char *Sign(char *message, EVP_PKEY *key);
+bool Verify(char *message, unsigned char *signature, EVP_PKEY *pubkey);
+unsigned char *GenerateRandomBytes(int size);
 
-};  // namespace Crypto
+#ifdef __cplusplus
+}  // namespace Crypto
 
 }  // namespace TCPChat
+#endif
 
 #endif /* !CRYPTO_H */

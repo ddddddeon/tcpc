@@ -1,6 +1,7 @@
 #include "client.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include <asio.hpp>
 #include <fstream>
@@ -8,11 +9,9 @@
 #include <string>
 #include <thread>
 
-#include "../lib/crypto.h"
 #include "../lib/socket.h"
 
 using asio::ip::tcp;
-using CryptoPP::SecByteBlock;
 using std::cout;
 using std::endl;
 using std::flush;
@@ -62,10 +61,10 @@ void Client::ReadMessages(tcp::socket &socket) {
 
     asio::streambuf::const_buffers_type bufs = buf.data();
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
-    message = message.substr(0, message.size() - 2);
+    message = message.substr(0, message.size() - 1);
 
     if (Socket::ParseVerifyMessage(message)) {
-      Socket::Send(*_socket, "/verify foobar\n");
+      Verify(message);
 
       asio::streambuf verified_buf;
       std::string verified_response = Socket::ReadLine(*_socket);
@@ -143,26 +142,30 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
-  _privkey = Crypto::GenerateKey(KeyPairPath);
-  _pubkey = RSA::PublicKey(_privkey);
-  _pubkey_string = Crypto::PubKeyToString(_pubkey);
-  _pubkey_string = Crypto::StripNewLines(_pubkey_string);
+  _privkey = RSAGenerateKey(2048);
+
+  char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
+  char *pubkey_path = (char *)(KeyPairPath + PubKeyFileName).c_str();
+
+  RSAKeyToFile(_privkey, privkey_path, true);
+  RSAKeyToFile(_privkey, pubkey_path, false);
+  _pubkey = RSAFileToKey(pubkey_path, false);
+
+  _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
+  _pubkey_string = Socket::StripNewLines(_pubkey_string);
   _logger.Info("Generated Keypair in " + KeyPairPath);
+
+  _logger.Info(_pubkey_string);
 }
 
 bool Client::LoadKeyPair(std::string path) {
-  std::string privkey_path = path + "id_rsa";
-  std::string pubkey_path = privkey_path + ".pub";
-
   try {
-    CryptoPP::ByteQueue privkey_bytes = Crypto::LoadKeyFromFile(privkey_path);
-    CryptoPP::ByteQueue pubkey_bytes = Crypto::LoadKeyFromFile(pubkey_path);
+    _privkey = RSAFileToKey((char *)(path + PrivKeyFileName).c_str(), true);
+    _pubkey = RSAFileToKey((char *)(path + PubKeyFileName).c_str(), false);
 
-    _privkey.Load(privkey_bytes);
-    _pubkey.Load(pubkey_bytes);
-
-    _pubkey_string = Crypto::PubKeyToString(_pubkey);
-    _pubkey_string = Crypto::StripNewLines(_pubkey_string);
+    _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
+    _logger.Info("Loaded key");
+    _pubkey_string = Socket::StripNewLines(_pubkey_string);
 
     return true;
   } catch (std::exception &e) {
@@ -184,11 +187,20 @@ void Client::Authenticate() {
   nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
   if (Socket::ParseVerifyMessage(nonce_response)) {
-    std::string signature = Crypto::Sign(nonce_response, _privkey);
-    Socket::Send(*_socket, "/verify " + signature + "\n");
-    std::string verified_response = Socket::ReadLine(*_socket);
-    _logger.Raw(verified_response);
+    Verify(nonce_response);
   }
+}
+void Client::Verify(std::string response) {
+  unsigned char *signature = RSASign((char *)response.c_str(), _privkey);
+
+  std::string signature_string(256, '\0');
+  for (int i = 0; i < 256; i++) {
+    signature_string[i] = signature[i];
+  }
+
+  Socket::Send(*_socket, "/verify " + signature_string + "\n");
+  std::string verified_response = Socket::ReadLine(*_socket);
+  _logger.Raw(verified_response);
 }
 
 }  // namespace TCPChat

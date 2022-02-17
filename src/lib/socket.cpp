@@ -4,6 +4,7 @@
 
 namespace TCPChat {
 
+// TODO rename this to Transport
 namespace Socket {
 
 std::string ReadLine(tcp::socket &socket) {
@@ -32,6 +33,14 @@ bool ParseVerifyMessage(std::string &message) {
     return true;
   }
   return false;
+}
+
+std::string StripNewLines(std::string key) {
+  return std::regex_replace(key, std::regex("\n"), "?");
+}
+
+std::string ExpandNewLines(std::string key) {
+  return std::regex_replace(key, std::regex("\\?"), "\n");
 }
 
 }  // namespace Socket

@@ -1,6 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include <dcrypt.h>
+
 #include <asio.hpp>
 #include <list>
 #include <mutex>
