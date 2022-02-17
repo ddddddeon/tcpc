@@ -164,8 +164,7 @@ bool Client::LoadKeyPair(std::string path) {
     _pubkey = RSAFileToKey((char *)(path + PubKeyFileName).c_str(), false);
 
     _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
-    _logger.Info("Loaded key");
-    _logger.Info(_pubkey_string);
+    _logger.Info("Loaded keypair");
     _pubkey_string = Socket::StripNewLines(_pubkey_string);
 
     return true;
@@ -194,16 +193,11 @@ void Client::Authenticate() {
 
     bool verified =
         RSAVerify((char *)nonce_response.c_str(), signature, _pubkey);
-    std::cout << verified << std::endl;
 
     std::string signature_string(256, '\0');
     for (int i = 0; i < 256; i++) {
       signature_string[i] = signature[i];
     }
-
-    // TODO figure out a way to strip and repopulate \0's
-    // right now we replace it with ~, but if an unrelated ~ is in the
-    // signature, it gets replaced with \0 by the server...
 
     Socket::Send(*_socket, "/verify " + signature_string + "\n");
     std::string verified_response = Socket::ReadLine(*_socket);

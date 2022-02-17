@@ -91,8 +91,6 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
       return;
     }
 
-    _logger.Info("****** " + message);
-
     char first_char = message.front();
 
     if (first_char == '\n' || first_char == '\r') {
@@ -139,7 +137,6 @@ std::string Server::SetUser(std::string name, std::string message,
     pubkey_string = Socket::ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
-    _logger.Info(pubkey_string);
 
     try {
       connection.PubKey =
