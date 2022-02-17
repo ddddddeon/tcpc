@@ -142,6 +142,7 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
+  // TODO don't hardcode 2048 here!
   _privkey = RSAGenerateKey(2048);
 
   char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
