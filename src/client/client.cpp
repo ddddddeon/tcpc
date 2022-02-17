@@ -143,6 +143,7 @@ void Client::ProcessInputChar() {
 
 void Client::GenerateKeyPair() {
   // TODO don't hardcode 2048 here!
+  // Why does it fail when I use a 4096 bit key?!
   _privkey = RSAGenerateKey(2048);
 
   char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
@@ -193,9 +194,10 @@ void Client::Authenticate() {
 }
 void Client::Verify(std::string response) {
   unsigned char *signature = RSASign((char *)response.c_str(), _privkey);
+  int key_size = RSAKeySize(_privkey);
 
-  std::string signature_string(256, '\0');
-  for (int i = 0; i < 256; i++) {
+  std::string signature_string(key_size, '\0');
+  for (int i = 0; i < key_size; i++) {
     signature_string[i] = signature[i];
   }
 

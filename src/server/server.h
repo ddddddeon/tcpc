@@ -30,6 +30,9 @@ class Server {
   std::mutex _threads_mutex;
   std::string _motd_path;
   std::string _motd;
+  int _seed_length = 32;
+  std::string const _alphanumeric =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
   std::string LoadMOTD(std::string path);
   void Handle(tcp::socket &socket, Connection &connection);
@@ -40,6 +43,7 @@ class Server {
   void Broadcast(std::string message);
   int Disconnect(tcp::socket &socket);
   std::string GetAddress(tcp::socket &socket);
+  std::string GenerateSeed(int length);
 
  public:
   Server(asio::ip::address_v4 interface, int port, DB &db,

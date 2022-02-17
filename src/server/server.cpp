@@ -223,7 +223,7 @@ std::string Server::SetUser(std::string name, std::string message,
       if (!authenticated) {
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
-        Socket::Send(connection.Socket, error);
+        Socket::Send(connection.Socket, error + "\r\n");
       } else {
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
@@ -262,34 +262,28 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
         RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
     connection.PubKey = pubkey;
 
-    int length = 32;
-    unsigned char *bytes = GenerateRandomBytes(length);
-    char hex_string[length];
-
-    std::string alphabet =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@";
-
-    for (int i = 0; i < length; i++) {
-      hex_string[i] = alphabet[((int)bytes[i]) % 63];
-    }
-    hex_string[length] = '\0';
-
-    std::string byte_string = std::string(hex_string);
-
-    Socket::Send(connection.Socket, "/verify " + byte_string + "\r\n");
+    std::string seed = GenerateSeed(_seed_length);
+    Socket::Send(connection.Socket, "/verify " + seed + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
 
-    if (Socket::ParseVerifyMessage(response)) {
-      // TODO don't hardcode 256 here! make a KeyLength function in dcrypt?
-      unsigned char *response_bytes =
-          (unsigned char *)calloc(256, sizeof(unsigned char));
+    // TODO why is response only 512 bytes here if key is 4096? should it be
+    // "/verify " + 512?
 
-      for (int i = 0; i < 256; i++) {
+    if (Socket::ParseVerifyMessage(response)) {
+      int key_size = RSAKeySize(pubkey);
+      _logger.Info(std::to_string(key_size));
+      _logger.Info(std::to_string(response.length()));
+
+      unsigned char *response_bytes =
+          (unsigned char *)calloc(key_size, sizeof(unsigned char));
+
+      for (int i = 0; i < key_size; i++) {
         response_bytes[i] = (unsigned char)response[i];
+        printf("i: %d rb: %x r: %x\n", i, (unsigned char)response_bytes[i],
+               (unsigned char)response[i]);
       }
 
-      bool verified =
-          RSAVerify((char *)byte_string.c_str(), response_bytes, pubkey);
+      bool verified = RSAVerify((char *)seed.c_str(), response_bytes, pubkey);
 
       if (!verified) {
         return false;
@@ -352,6 +346,19 @@ int Server::Disconnect(tcp::socket &socket) {
 std::string Server::GetAddress(tcp::socket &socket) {
   return socket.remote_endpoint().address().to_string() + ":" +
          std::to_string(socket.remote_endpoint().port());
+}
+
+std::string Server::GenerateSeed(int length) {
+  unsigned char *bytes = GenerateRandomBytes(length);
+  char hex_string[length];
+  int modulus = _alphanumeric.length() - 1;
+
+  for (int i = 0; i < length; i++) {
+    hex_string[i] = _alphanumeric[(int)bytes[i] % modulus];
+  }
+  hex_string[length] = '\0';
+
+  return std::string(hex_string);
 }
 
 void Server::Stop() {
