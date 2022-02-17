@@ -229,7 +229,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     unsigned char *bytes = GenerateRandomBytes(length);
     char hex_string[length];
 
-    char *alphabet =
+    std::string alphabet =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@";
 
     for (int i = 0; i < length; i++) {
