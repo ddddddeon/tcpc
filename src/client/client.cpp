@@ -8,7 +8,6 @@
 #include <string>
 #include <thread>
 
-#include "../lib/crypto.h"
 #include "../lib/socket.h"
 
 using asio::ip::tcp;
@@ -142,27 +141,30 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
-  _privkey = Crypto::GenerateKey(KeyPairPath);
+  _privkey = RSAGenerateKey(4096);
 
-  // TODO convert to openssl
-  _pubkey = RSA::PublicKey(_privkey);
-  _pubkey_string = Crypto::PubKeyToString(_pubkey);
+  char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
+  char *pubkey_path = (char *)(KeyPairPath + PubKeyFileName).c_str();
+
+  RSAKeyToFile(_privkey, privkey_path, true);
+  RSAKeyToFile(_privkey, pubkey_path, false);
+  _pubkey = RSAFileToKey(pubkey_path, false);
+
+  _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
   _pubkey_string = Socket::StripNewLines(_pubkey_string);
   _logger.Info("Generated Keypair in " + KeyPairPath);
+
+  _logger.Info(_pubkey_string);
 }
 
 bool Client::LoadKeyPair(std::string path) {
-  std::string privkey_path = path + "id_rsa";
-  std::string pubkey_path = privkey_path + ".pub";
-
   try {
-    CryptoPP::ByteQueue privkey_bytes = Crypto::LoadKeyFromFile(privkey_path);
-    CryptoPP::ByteQueue pubkey_bytes = Crypto::LoadKeyFromFile(pubkey_path);
+    _privkey = RSAFileToKey((char *)(path + PrivKeyFileName).c_str(), true);
+    _pubkey = RSAFileToKey((char *)(path + PubKeyFileName).c_str(), false);
 
-    _privkey.Load(privkey_bytes);
-    _pubkey.Load(pubkey_bytes);
-
-    _pubkey_string = Crypto::PubKeyToString(_pubkey);
+    _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
+    _logger.Info("Loaded key");
+    _logger.Info(_pubkey_string);
     _pubkey_string = Socket::StripNewLines(_pubkey_string);
 
     return true;
@@ -173,23 +175,23 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  std::string motd = Socket::ReadLine(*_socket);
-  _logger.Raw(motd);
+  //   std::string motd = Socket::ReadLine(*_socket);
+  //   _logger.Raw(motd);
 
-  std::string response = Socket::ReadLine(*_socket);
-  _logger.Raw(response);
+  //   std::string response = Socket::ReadLine(*_socket);
+  //   _logger.Raw(response);
 
-  Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
+  //   Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-  std::string nonce_response = Socket::ReadLine(*_socket);
-  nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
+  //   std::string nonce_response = Socket::ReadLine(*_socket);
+  //   nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
-  if (Socket::ParseVerifyMessage(nonce_response)) {
-    std::string signature = Crypto::Sign(nonce_response, _privkey);
-    Socket::Send(*_socket, "/verify " + signature + "\n");
-    std::string verified_response = Socket::ReadLine(*_socket);
-    _logger.Raw(verified_response);
-  }
+  //   if (Socket::ParseVerifyMessage(nonce_response)) {
+  //     std::string signature = Crypto::Sign(nonce_response, _privkey);
+  //     Socket::Send(*_socket, "/verify " + signature + "\n");
+  //     std::string verified_response = Socket::ReadLine(*_socket);
+  //     _logger.Raw(verified_response);
+  //   }
 }
 
 }  // namespace TCPChat

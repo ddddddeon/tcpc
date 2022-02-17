@@ -73,6 +73,9 @@ int main(int argc, char *argv[]) {
   Client client(ClientConfig::Host, ClientConfig::Port, ClientConfig::Name,
                 ClientConfig::GenerateKeyPair, ClientConfig::KeyPairPath,
                 logger);
+  logger.Info(client.KeyPairPath);
+  logger.Info(client.PrivKeyFileName);
+  logger.Info(client.PubKeyFileName);
 
   if (!ClientConfig::GenerateKeyPair) {
     logger.Info("Loading keypair from " + ClientConfig::KeyPairPath);
