@@ -243,6 +243,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     std::string response = Socket::ReadLine(connection.Socket);
 
     if (Socket::ParseVerifyMessage(response)) {
+      // TODO don't hardcode 256 here! make a KeyLength function in dcrypt?
       unsigned char *response_bytes =
           (unsigned char *)calloc(256, sizeof(unsigned char));
 
