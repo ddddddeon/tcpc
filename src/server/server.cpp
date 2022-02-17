@@ -153,11 +153,6 @@ std::string Server::SetUser(std::string name, std::string message,
     }
   }
 
-  // unsigned char *connection_pubkey = RSAKeyToString(connection.PubKey,
-  // false); std::string connection_pubkey_string =
-  //     connection_pubkey != NULL ? std::string((char *)connection_pubkey) :
-  //     "";
-
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
