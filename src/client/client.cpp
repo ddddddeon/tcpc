@@ -188,20 +188,24 @@ void Client::Authenticate() {
   nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
   if (Socket::ParseVerifyMessage(nonce_response)) {
+    _logger.Info(nonce_response);
     unsigned char *signature =
         RSASign((char *)nonce_response.c_str(), _privkey);
 
-    char signature_string[256];
+    bool verified =
+        RSAVerify((char *)nonce_response.c_str(), signature, _pubkey);
+    std::cout << verified << std::endl;
+
+    std::string signature_string(256, '\0');
     for (int i = 0; i < 256; i++) {
-      if (signature[i] != '\0') {
-        signature_string[i] = signature[i];
-      } else {
-        signature_string[i] = '~';
-      }
-      printf("%x", (unsigned char)signature_string[i]);
+      signature_string[i] = signature[i];
     }
 
-    Socket::Send(*_socket, "/verify " + std::string(signature_string) + "\n");
+    // TODO figure out a way to strip and repopulate \0's
+    // right now we replace it with ~, but if an unrelated ~ is in the
+    // signature, it gets replaced with \0 by the server...
+
+    Socket::Send(*_socket, "/verify " + signature_string + "\n");
     std::string verified_response = Socket::ReadLine(*_socket);
     _logger.Raw(verified_response);
   }

@@ -224,38 +224,34 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
 
     int length = 32;
     unsigned char *bytes = GenerateRandomBytes(length);
-    char sanitized_bytes[length];
+    char hex_string[length];
+
+    char *alphabet =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@";
 
     for (int i = 0; i < length; i++) {
-      if (bytes[i] == '\0' || bytes[i] == '\n' || bytes[i] == '\r' ||
-          bytes[i] == '\b') {
-        sanitized_bytes[i] = '~';
-      } else {
-        sanitized_bytes[i] = bytes[i];
-      }
+      hex_string[i] = alphabet[((int)bytes[i]) % 63];
     }
-    // std::string byte_string = std::string(sanitized_bytes);
-    std::string byte_string = "foobar";
+    hex_string[length] = '\0';
+
+    std::string byte_string = std::string(hex_string);
+
     _logger.Info("Generated nonce: " + byte_string);
 
     Socket::Send(connection.Socket, "/verify " + byte_string + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
 
     if (Socket::ParseVerifyMessage(response)) {
-      unsigned char response_bytes[256];
+      unsigned char *response_bytes =
+          (unsigned char *)calloc(256, sizeof(unsigned char));
 
       for (int i = 0; i < 256; i++) {
-        if (response[i] != '~') {
-          response_bytes[i] = (unsigned char)response[i];
-        } else {
-          response_bytes[i] = '\0';
-        }
-        printf("%x", (unsigned char)response[i]);
+        response_bytes[i] = (unsigned char)response[i];
       }
-      printf("\n");
 
       bool verified =
           RSAVerify((char *)byte_string.c_str(), response_bytes, pubkey);
+
       if (!verified) {
         return false;
       }
