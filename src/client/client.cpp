@@ -61,10 +61,10 @@ void Client::ReadMessages(tcp::socket &socket) {
 
     asio::streambuf::const_buffers_type bufs = buf.data();
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
-    message = message.substr(0, message.size() - 2);
+    message = message.substr(0, message.size() - 1);
 
     if (Socket::ParseVerifyMessage(message)) {
-      Socket::Send(*_socket, "/verify foobar\n");
+      Verify(message);
 
       asio::streambuf verified_buf;
       std::string verified_response = Socket::ReadLine(*_socket);
@@ -164,7 +164,7 @@ bool Client::LoadKeyPair(std::string path) {
     _pubkey = RSAFileToKey((char *)(path + PubKeyFileName).c_str(), false);
 
     _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
-    _logger.Info("Loaded keypair");
+    _logger.Info("Loaded key");
     _pubkey_string = Socket::StripNewLines(_pubkey_string);
 
     return true;
@@ -187,22 +187,20 @@ void Client::Authenticate() {
   nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
   if (Socket::ParseVerifyMessage(nonce_response)) {
-    _logger.Info(nonce_response);
-    unsigned char *signature =
-        RSASign((char *)nonce_response.c_str(), _privkey);
-
-    bool verified =
-        RSAVerify((char *)nonce_response.c_str(), signature, _pubkey);
-
-    std::string signature_string(256, '\0');
-    for (int i = 0; i < 256; i++) {
-      signature_string[i] = signature[i];
-    }
-
-    Socket::Send(*_socket, "/verify " + signature_string + "\n");
-    std::string verified_response = Socket::ReadLine(*_socket);
-    _logger.Raw(verified_response);
+    Verify(nonce_response);
   }
+}
+void Client::Verify(std::string response) {
+  unsigned char *signature = RSASign((char *)response.c_str(), _privkey);
+
+  std::string signature_string(256, '\0');
+  for (int i = 0; i < 256; i++) {
+    signature_string[i] = signature[i];
+  }
+
+  Socket::Send(*_socket, "/verify " + signature_string + "\n");
+  std::string verified_response = Socket::ReadLine(*_socket);
+  _logger.Raw(verified_response);
 }
 
 }  // namespace TCPChat

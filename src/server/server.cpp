@@ -128,7 +128,13 @@ std::string Server::SetUser(std::string name, std::string message,
   std::smatch key_match;
   std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
   std::regex_search(message, key_match, key_regex);
-  std::string pubkey_string = "";
+
+  // if this is null, that's fine, just continue
+  char *pubkey_string_or_null =
+      (char *)RSAKeyToString(connection.PubKey, false);
+
+  std::string pubkey_string =
+      pubkey_string_or_null != nullptr ? pubkey_string_or_null : "";
 
   if (key_match.length() == 0) {
     show_entered_message = false;
@@ -138,19 +144,19 @@ std::string Server::SetUser(std::string name, std::string message,
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
 
-    try {
-      connection.PubKey =
-          RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
-    } catch (std::exception &e) {
+    connection.PubKey =
+        RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
+    if (connection.PubKey == nullptr) {
       error = "*** Invalid public key from " + name;
       Socket::Send(connection.Socket, error + "\r\n");
       _logger.Error(error);
     }
   }
 
-  unsigned char *connection_pubkey = RSAKeyToString(connection.PubKey, false);
-  std::string connection_pubkey_string =
-      connection_pubkey != NULL ? std::string((char *)connection_pubkey) : "";
+  // unsigned char *connection_pubkey = RSAKeyToString(connection.PubKey,
+  // false); std::string connection_pubkey_string =
+  //     connection_pubkey != NULL ? std::string((char *)connection_pubkey) :
+  //     "";
 
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
@@ -158,7 +164,7 @@ std::string Server::SetUser(std::string name, std::string message,
   if (db_pubkey.length() == 0) {  // no user in db, free to create
     message.clear();
     _logger.Info("No user " + name + " in the db-- creating");
-    _db.Set(name, connection_pubkey_string);
+    _db.Set(name, pubkey_string);
     connection.Name = name;
     connection.LoggedIn = true;
     Socket::Send(connection.Socket,
@@ -170,7 +176,7 @@ std::string Server::SetUser(std::string name, std::string message,
   } else if (db_pubkey.length() > 0) {
     message.clear();
     // TODO handle all instances of Send() or ReadLine() for response.length 0
-    if (connection_pubkey_string.compare(db_pubkey) != 0) {
+    if (pubkey_string.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
       Socket::Send(connection.Socket, error + "\r\n");
@@ -232,8 +238,6 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     hex_string[length] = '\0';
 
     std::string byte_string = std::string(hex_string);
-
-    _logger.Info("Generated nonce: " + byte_string);
 
     Socket::Send(connection.Socket, "/verify " + byte_string + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
