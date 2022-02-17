@@ -1,6 +1,7 @@
 #include "client.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include <asio.hpp>
 #include <fstream>
@@ -141,7 +142,7 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
-  _privkey = RSAGenerateKey(4096);
+  _privkey = RSAGenerateKey(2048);
 
   char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
   char *pubkey_path = (char *)(KeyPairPath + PubKeyFileName).c_str();
@@ -175,23 +176,35 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  //   std::string motd = Socket::ReadLine(*_socket);
-  //   _logger.Raw(motd);
+  std::string motd = Socket::ReadLine(*_socket);
+  _logger.Raw(motd);
 
-  //   std::string response = Socket::ReadLine(*_socket);
-  //   _logger.Raw(response);
+  std::string response = Socket::ReadLine(*_socket);
+  _logger.Raw(response);
 
-  //   Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
+  Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-  //   std::string nonce_response = Socket::ReadLine(*_socket);
-  //   nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
+  std::string nonce_response = Socket::ReadLine(*_socket);
+  nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
-  //   if (Socket::ParseVerifyMessage(nonce_response)) {
-  //     std::string signature = Crypto::Sign(nonce_response, _privkey);
-  //     Socket::Send(*_socket, "/verify " + signature + "\n");
-  //     std::string verified_response = Socket::ReadLine(*_socket);
-  //     _logger.Raw(verified_response);
-  //   }
+  if (Socket::ParseVerifyMessage(nonce_response)) {
+    unsigned char *signature =
+        RSASign((char *)nonce_response.c_str(), _privkey);
+
+    char signature_string[256];
+    for (int i = 0; i < 256; i++) {
+      if (signature[i] != '\0') {
+        signature_string[i] = signature[i];
+      } else {
+        signature_string[i] = '~';
+      }
+      printf("%x", (unsigned char)signature_string[i]);
+    }
+
+    Socket::Send(*_socket, "/verify " + std::string(signature_string) + "\n");
+    std::string verified_response = Socket::ReadLine(*_socket);
+    _logger.Raw(verified_response);
+  }
 }
 
 }  // namespace TCPChat

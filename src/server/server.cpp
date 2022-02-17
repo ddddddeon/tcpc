@@ -10,7 +10,6 @@
 #include <string>
 #include <thread>
 
-#include "../lib/crypto.h"
 #include "../lib/filesystem.h"
 #include "../lib/socket.h"
 #include "connection.h"
@@ -92,6 +91,8 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
       return;
     }
 
+    _logger.Info("****** " + message);
+
     char first_char = message.front();
 
     if (first_char == '\n' || first_char == '\r') {
@@ -127,14 +128,9 @@ std::string Server::SetUser(std::string name, std::string message,
   bool show_entered_message = true;
   std::string error = "";
   std::smatch key_match;
-  std::regex key_regex("[A-Za-z0-9/\?\+]+\/\/");
+  std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
   std::regex_search(message, key_match, key_regex);
   std::string pubkey_string = "";
-  try {
-    pubkey_string = Crypto::PubKeyToString(connection.PubKey);
-  } catch (std::exception &e) {
-    _logger.Error("foo");
-  }
 
   if (key_match.length() == 0) {
     show_entered_message = false;
@@ -143,9 +139,11 @@ std::string Server::SetUser(std::string name, std::string message,
     pubkey_string = Socket::ExpandNewLines(match);
     _logger.Info("Got public key from " + connection.Name + "(" +
                  connection.Address + ")");
+    _logger.Info(pubkey_string);
 
     try {
-      connection.PubKey = Crypto::StringToPubKey(pubkey_string);
+      connection.PubKey =
+          RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
     } catch (std::exception &e) {
       error = "*** Invalid public key from " + name;
       Socket::Send(connection.Socket, error + "\r\n");
@@ -153,14 +151,17 @@ std::string Server::SetUser(std::string name, std::string message,
     }
   }
 
-  std::string connection_pubkey = Crypto::PubKeyToString(connection.PubKey);
+  unsigned char *connection_pubkey = RSAKeyToString(connection.PubKey, false);
+  std::string connection_pubkey_string =
+      connection_pubkey != NULL ? std::string((char *)connection_pubkey) : "";
+
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
   if (db_pubkey.length() == 0) {  // no user in db, free to create
     message.clear();
     _logger.Info("No user " + name + " in the db-- creating");
-    _db.Set(name, connection_pubkey);
+    _db.Set(name, connection_pubkey_string);
     connection.Name = name;
     connection.LoggedIn = true;
     Socket::Send(connection.Socket,
@@ -172,7 +173,7 @@ std::string Server::SetUser(std::string name, std::string message,
   } else if (db_pubkey.length() > 0) {
     message.clear();
     // TODO handle all instances of Send() or ReadLine() for response.length 0
-    if (connection_pubkey.compare(db_pubkey) != 0) {
+    if (connection_pubkey_string.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
       Socket::Send(connection.Socket, error + "\r\n");
@@ -217,20 +218,44 @@ std::string Server::SetUser(std::string name, std::string message,
 
 bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   try {
-    RSA::PublicKey pubkey = Crypto::StringToPubKey(pubkey_string);
+    DCRYPT_PKEY *pubkey =
+        RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
     connection.PubKey = pubkey;
 
     int length = 32;
-    unsigned char *bytes = Crypto::GenerateRandomBytes(length);
-    std::string byte_string = std::string((char *)bytes);
+    unsigned char *bytes = GenerateRandomBytes(length);
+    char sanitized_bytes[length];
 
+    for (int i = 0; i < length; i++) {
+      if (bytes[i] == '\0' || bytes[i] == '\n' || bytes[i] == '\r' ||
+          bytes[i] == '\b') {
+        sanitized_bytes[i] = '~';
+      } else {
+        sanitized_bytes[i] = bytes[i];
+      }
+    }
+    // std::string byte_string = std::string(sanitized_bytes);
+    std::string byte_string = "foobar";
     _logger.Info("Generated nonce: " + byte_string);
 
     Socket::Send(connection.Socket, "/verify " + byte_string + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
 
     if (Socket::ParseVerifyMessage(response)) {
-      bool verified = Crypto::Verify(response, byte_string, pubkey);
+      unsigned char response_bytes[256];
+
+      for (int i = 0; i < 256; i++) {
+        if (response[i] != '~') {
+          response_bytes[i] = (unsigned char)response[i];
+        } else {
+          response_bytes[i] = '\0';
+        }
+        printf("%x", (unsigned char)response[i]);
+      }
+      printf("\n");
+
+      bool verified =
+          RSAVerify((char *)byte_string.c_str(), response_bytes, pubkey);
       if (!verified) {
         return false;
       }
