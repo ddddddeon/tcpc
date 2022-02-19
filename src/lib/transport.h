@@ -8,7 +8,7 @@ using asio::ip::tcp;
 
 namespace TCPChat {
 
-namespace Socket {
+namespace Transport {
 
 std::string ReadLine(tcp::socket &socket);
 void Send(tcp::socket &socket, std::string message);
@@ -16,7 +16,7 @@ bool ParseVerifyMessage(std::string &message);
 std::string StripNewLines(std::string key);
 std::string ExpandNewLines(std::string key);
 
-}  // namespace Socket
+}  // namespace Transport
 
 }  // namespace TCPChat
 

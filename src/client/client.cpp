@@ -9,7 +9,7 @@
 #include <string>
 #include <thread>
 
-#include "../lib/socket.h"
+#include "../lib/transport.h"
 
 using asio::ip::tcp;
 using std::cout;
@@ -52,7 +52,7 @@ void Client::ReadMessages(tcp::socket &socket) {
     asio::streambuf buf;
 
     try {
-      // TODO change to Socket::Readline and handle accordingly
+      // TODO change to Transport::Readline and handle accordingly
       size_t s = asio::read_until(socket, buf, "\n");
     } catch (std::exception &e) {
       _logger.Error(e.what());
@@ -63,11 +63,11 @@ void Client::ReadMessages(tcp::socket &socket) {
     std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
     message = message.substr(0, message.size() - 1);
 
-    if (Socket::ParseVerifyMessage(message)) {
+    if (Transport::ParseVerifyMessage(message)) {
       Verify(message);
 
       asio::streambuf verified_buf;
-      std::string verified_response = Socket::ReadLine(*_socket);
+      std::string verified_response = Transport::ReadLine(*_socket);
       _logger.Raw(verified_response);
       message.clear();
       cout << flush;
@@ -152,7 +152,7 @@ void Client::GenerateKeyPair() {
   RSAKeyToFile(_privkey, pubkey_path, false);
   _pubkey = RSAFileToKey(pubkey_path, false);
   _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
-  _pubkey_string = Socket::StripNewLines(_pubkey_string);
+  _pubkey_string = Transport::StripNewLines(_pubkey_string);
 
   _logger.Info("Generated Keypair in " + KeyPairPath);
 }
@@ -164,7 +164,7 @@ bool Client::LoadKeyPair(std::string path) {
 
     _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
     _logger.Info("Loaded key");
-    _pubkey_string = Socket::StripNewLines(_pubkey_string);
+    _pubkey_string = Transport::StripNewLines(_pubkey_string);
 
     return true;
   } catch (std::exception &e) {
@@ -174,18 +174,18 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  std::string motd = Socket::ReadLine(*_socket);
+  std::string motd = Transport::ReadLine(*_socket);
   _logger.Raw(motd);
 
-  std::string response = Socket::ReadLine(*_socket);
+  std::string response = Transport::ReadLine(*_socket);
   _logger.Raw(response);
 
-  Socket::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
+  Transport::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-  std::string nonce_response = Socket::ReadLine(*_socket);
+  std::string nonce_response = Transport::ReadLine(*_socket);
   nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
-  if (Socket::ParseVerifyMessage(nonce_response)) {
+  if (Transport::ParseVerifyMessage(nonce_response)) {
     Verify(nonce_response);
   }
 }
@@ -197,8 +197,8 @@ void Client::Verify(std::string response) {
     signature_string[i] = signature[i];
   }
 
-  Socket::Send(*_socket, "/verify " + signature_string + "\n");
-  std::string verified_response = Socket::ReadLine(*_socket);
+  Transport::Send(*_socket, "/verify " + signature_string + "\n");
+  std::string verified_response = Transport::ReadLine(*_socket);
   _logger.Raw(verified_response);
 }
 

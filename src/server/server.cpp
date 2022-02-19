@@ -11,7 +11,7 @@
 #include <thread>
 
 #include "../lib/filesystem.h"
-#include "../lib/socket.h"
+#include "../lib/transport.h"
 #include "connection.h"
 
 using asio::ip::tcp;
@@ -81,11 +81,11 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
 
     if (!connection.LoggedIn && connection.Name.compare("guest") == 0) {
       connection.LoggedIn = true;
-      Socket::Send(connection.Socket, _motd);
+      Transport::Send(connection.Socket, _motd);
     }
 
     try {
-      message = Socket::ReadLine(socket);
+      message = Transport::ReadLine(socket);
     } catch (std::exception &e) {
       connected = Disconnect(socket);
       return;
@@ -144,13 +144,13 @@ std::string Server::SetUser(std::string name, std::string message,
     show_entered_message = false;
   } else {
     std::string match = key_match.str();
-    pubkey_string = Socket::ExpandNewLines(match);
+    pubkey_string = Transport::ExpandNewLines(match);
 
     connection.PubKey =
         RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
     if (connection.PubKey == nullptr) {
       error = "*** Invalid public key from " + name;
-      Socket::Send(connection.Socket, error + "\r\n");
+      Transport::Send(connection.Socket, error + "\r\n");
       _logger.Error(error);
     }
   }
@@ -164,8 +164,8 @@ std::string Server::SetUser(std::string name, std::string message,
     _db.Set(name, pubkey_string);
     connection.Name = name;
     connection.LoggedIn = true;
-    Socket::Send(connection.Socket,
-                 "Successfully claimed user name " + name + "\r\n");
+    Transport::Send(connection.Socket,
+                    "Successfully claimed user name " + name + "\r\n");
     if (!show_entered_message) {
       message = old_name + " (" + connection.Address + ") renamed to " +
                 connection.Name + "\n";
@@ -177,22 +177,22 @@ std::string Server::SetUser(std::string name, std::string message,
     if (pubkey_string.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
-      Socket::Send(connection.Socket, error + "\r\n");
+      Transport::Send(connection.Socket, error + "\r\n");
     } else {
       _logger.Info("Authenticating " + name + "...");
       bool authenticated = Authenticate(pubkey_string, connection);
       if (!authenticated) {
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
-        Socket::Send(connection.Socket, error + "\r\n");
+        Transport::Send(connection.Socket, error + "\r\n");
       } else {
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
-        Socket::Send(connection.Socket,
-                     "Successfully authenticated you as " + name + "\r\n");
+        Transport::Send(connection.Socket,
+                        "Successfully authenticated you as " + name + "\r\n");
 
         if (!connection.LoggedIn) {
-          Socket::Send(connection.Socket, _motd);
+          Transport::Send(connection.Socket, _motd);
           connection.LoggedIn = true;
           Broadcast(connection.Name + " has entered the chat (" +
                     connection.Address + ")\r\n");
@@ -224,10 +224,10 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     connection.PubKey = pubkey;
 
     std::string seed = GenerateSeed(_seed_length);
-    Socket::Send(connection.Socket, "/verify " + seed + "\r\n");
-    std::string response = Socket::ReadLine(connection.Socket);
+    Transport::Send(connection.Socket, "/verify " + seed + "\r\n");
+    std::string response = Transport::ReadLine(connection.Socket);
 
-    if (Socket::ParseVerifyMessage(response)) {
+    if (Transport::ParseVerifyMessage(response)) {
       bool verified = RSAVerify((char *)seed.c_str(),
                                 (unsigned char *)response.c_str(), pubkey);
       if (!verified) {
@@ -249,7 +249,7 @@ void Server::Broadcast(std::string message) {
   unique_lock<mutex> sockets_lock(_sockets_mutex);
   auto socket = _sockets.begin();
   while (socket != _sockets.end()) {
-    Socket::Send(*socket, message);
+    Transport::Send(*socket, message);
     socket++;
   }
   sockets_lock.unlock();

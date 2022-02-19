@@ -1,12 +1,11 @@
-#include "socket.h"
+#include "transport.h"
 
-#include <iostream>  // TODO remove
 #include <regex>
 
 namespace TCPChat {
 
 // TODO rename this to Transport
-namespace Socket {
+namespace Transport {
 
 std::string ReadLine(tcp::socket &socket) {
   asio::streambuf buf;
@@ -44,6 +43,6 @@ std::string ExpandNewLines(std::string key) {
   return std::regex_replace(key, std::regex("\\?"), "\n");
 }
 
-}  // namespace Socket
+}  // namespace Transport
 
 }  // namespace TCPChat
