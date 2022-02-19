@@ -142,8 +142,7 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
-  // TODO don't hardcode 2048 here!
-  // Why does it fail when I use a 4096 bit key?!
+  // TODO don't hardcode here!
   _privkey = RSAGenerateKey(4096);
 
   char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
@@ -152,18 +151,9 @@ void Client::GenerateKeyPair() {
   RSAKeyToFile(_privkey, privkey_path, true);
   RSAKeyToFile(_privkey, pubkey_path, false);
   _pubkey = RSAFileToKey(pubkey_path, false);
-
   _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
-
-  _logger.Info("_pubkey_string: " + std::to_string(_pubkey_string.length()));
-
   _pubkey_string = Socket::StripNewLines(_pubkey_string);
-
-  _logger.Info("_pubkey_string: " + std::to_string(_pubkey_string.length()));
-
   _logger.Info("Generated Keypair in " + KeyPairPath);
-
-  _logger.Info(_pubkey_string);
 }
 
 bool Client::LoadKeyPair(std::string path) {
