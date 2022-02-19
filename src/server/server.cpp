@@ -212,7 +212,6 @@ std::string Server::SetUser(std::string name, std::string message,
     Broadcast(connection.Name + " has entered the chat (" + connection.Address +
               ")\r\n");
   }
-
   return message;
 }
 
