@@ -242,7 +242,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     _logger.Error(e.what());
     return false;
   }
-}  // namespace TCPChat
+}
 
 void Server::Broadcast(std::string message) {
   asio::error_code ignored;
