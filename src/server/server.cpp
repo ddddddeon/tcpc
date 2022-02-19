@@ -235,8 +235,6 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
 
       for (int i = 0; i < sig_length; i++) {
         response_bytes[i] = (unsigned char)response[i];
-        printf("i: %d rb: %x r: %x\n", i, (unsigned char)response_bytes[i],
-               (unsigned char)response[i]);
       }
 
       bool verified = RSAVerify((char *)seed.c_str(), response_bytes, pubkey);
