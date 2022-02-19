@@ -142,9 +142,7 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
-  // TODO don't hardcode 2048 here!
-  // Why does it fail when I use a 4096 bit key?!
-  _privkey = RSAGenerateKey(4096);
+  _privkey = RSAGenerateKey(KeyLength);
 
   char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
   char *pubkey_path = (char *)(KeyPairPath + PubKeyFileName).c_str();
