@@ -129,8 +129,7 @@ std::string Server::SetUser(std::string name, std::string message,
   bool show_entered_message = true;
   std::string error = "";
   std::smatch key_match;
-  std::regex key_regex(
-      "-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----\\?");
+  std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
   std::regex_search(message, key_match, key_regex);
 
   // TODO properly auth if client is run with -n flag
@@ -303,11 +302,11 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
       unsigned char *response_bytes =
           (unsigned char *)calloc(key_size, sizeof(unsigned char));
 
-      // for (int i = 0; i < key_size; i++) {
-      //   response_bytes[i] = (unsigned char)response[i];
-      //   printf("i: %d rb: %x r: %x\n", i, (unsigned char)response_bytes[i],
-      //          (unsigned char)response[i]);
-      // }
+      for (int i = 0; i < key_size; i++) {
+        response_bytes[i] = (unsigned char)response[i];
+        printf("i: %d rb: %x r: %x\n", i, (unsigned char)response_bytes[i],
+               (unsigned char)response[i]);
+      }
 
       bool verified = RSAVerify((char *)seed.c_str(), response_bytes, pubkey);
 
