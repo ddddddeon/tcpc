@@ -91,9 +91,6 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
       return;
     }
 
-    _logger.Info("*************");
-    _logger.Info(message);
-
     char first_char = message.front();
 
     if (first_char == '\n' || first_char == '\r') {
@@ -143,28 +140,11 @@ std::string Server::SetUser(std::string name, std::string message,
 
   pubkey_string = std::regex_replace(pubkey_string, std::regex("\n$"), "");
 
-  _logger.Info("1. pubkey_string length from connection.PubKey: " +
-               std::to_string(pubkey_string.length()));
-
-  _logger.Info("pubkey_string length from connection.PubKey: " +
-               std::to_string(pubkey_string.length()));
-
   if (key_match.length() == 0) {
     show_entered_message = false;
   } else {
     std::string match = key_match.str();
-
     pubkey_string = Socket::ExpandNewLines(match);
-
-    _logger.Info("2. key_match: " + std::to_string(key_match.length()));
-    _logger.Info(match);
-    _logger.Info("2. match: " + std::to_string(match.length()));
-
-    _logger.Info("Got public key from " + connection.Name + "(" +
-                 connection.Address + ")");
-
-    _logger.Info("2. Setting connection.Pubkey-- pubkey_string length: " +
-                 std::to_string(pubkey_string.length()));
 
     connection.PubKey =
         RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
@@ -179,11 +159,6 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string db_pubkey = _db.Get(name);
 
   if (db_pubkey.length() == 0) {  // no user in db, free to create
-    _logger.Info("3. Creating user with key_match length: " +
-                 std::to_string(key_match.length()));
-    _logger.Info("3. Creating user with pubkey_string length: " +
-                 std::to_string(pubkey_string.length()));
-
     message.clear();
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, pubkey_string);
@@ -196,45 +171,8 @@ std::string Server::SetUser(std::string name, std::string message,
                 connection.Name + "\n";
     }
   } else if (db_pubkey.length() > 0) {
-    _logger.Info("4. *** pubkey_string:");
-    for (int i = 0; i < pubkey_string.length(); i++) {
-      printf("%x", pubkey_string[i]);
-    }
-    printf("\n");
-
-    _logger.Info("4. pubkey_string length: " +
-                 std::to_string(pubkey_string.length()));
-
-    _logger.Info("4. db_pubkey:");
-    for (int i = 0; i < db_pubkey.length(); i++) {
-      printf("%x", db_pubkey[i]);
-    }
-    printf("\n");
-
-    _logger.Info("4. db pubkey length: " + std::to_string(db_pubkey.length()));
-    _logger.Info("4. keys are equal(0)? " +
-                 std::to_string(pubkey_string.compare(db_pubkey)));
-
     message.clear();
     // TODO handle all instances of Send() or ReadLine() for response.length 0
-
-    _logger.Info("*** pubkey_string:");
-    for (int i = 0; i < pubkey_string.length(); i++) {
-      printf("%x", pubkey_string[i]);
-    }
-    printf("\n");
-
-    _logger.Info("pubkey_string length: " +
-                 std::to_string(pubkey_string.length()));
-
-    _logger.Info("*** db_pubkey:");
-    for (int i = 0; i < db_pubkey.length(); i++) {
-      printf("%x", db_pubkey[i]);
-    }
-    printf("\n");
-
-    _logger.Info("db pubkey length: " + std::to_string(db_pubkey.length()));
-    _logger.Info(std::to_string(pubkey_string.compare(db_pubkey)));
 
     if (pubkey_string.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
@@ -289,17 +227,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     Socket::Send(connection.Socket, "/verify " + seed + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
 
-    _logger.Info(response);
-    _logger.Info(std::to_string(response.length()));
-
-    // TODO why is response only 512 bytes here if key is 4096? should it be
-    // "/verify " + 512?
-
     if (Socket::ParseVerifyMessage(response)) {
-      int key_size = RSAKeySize(pubkey);
-      _logger.Info(std::to_string(key_size));
-      _logger.Info(std::to_string(response.length()));
-
       int sig_length = response.length();
 
       unsigned char *response_bytes =
