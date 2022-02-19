@@ -142,6 +142,7 @@ void Client::ProcessInputChar() {
 }
 
 void Client::GenerateKeyPair() {
+  // TODO free() all the resources created by these dcrypt calls
   _privkey = RSAGenerateKey(KeyLength);
 
   char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
