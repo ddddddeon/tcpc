@@ -132,8 +132,6 @@ std::string Server::SetUser(std::string name, std::string message,
   std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
   std::regex_search(message, key_match, key_regex);
 
-  // TODO properly auth if client is run with -n flag
-
   // TODO wrap this is some condition
   // if this is null, that's fine, just continue
   char *pubkey_string_or_null =
@@ -290,6 +288,9 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     std::string seed = GenerateSeed(_seed_length);
     Socket::Send(connection.Socket, "/verify " + seed + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
+
+    _logger.Info(response);
+    _logger.Info(std::to_string(response.length()));
 
     // TODO why is response only 512 bytes here if key is 4096? should it be
     // "/verify " + 512?
