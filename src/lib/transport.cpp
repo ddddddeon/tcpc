@@ -4,7 +4,6 @@
 
 namespace TCPChat {
 
-// TODO rename this to Transport
 namespace Transport {
 
 std::string ReadLine(tcp::socket &socket) {
