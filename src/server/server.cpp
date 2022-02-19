@@ -158,7 +158,7 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string old_name = connection.Name;
   std::string db_pubkey = _db.Get(name);
 
-  if (db_pubkey.length() == 0) {  // no user in db, free to create
+  if (db_pubkey.length() == 0) {
     message.clear();
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, pubkey_string);
@@ -172,7 +172,6 @@ std::string Server::SetUser(std::string name, std::string message,
     }
   } else if (db_pubkey.length() > 0) {
     message.clear();
-    // TODO handle all instances of Send() or ReadLine() for response.length 0
 
     if (pubkey_string.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
