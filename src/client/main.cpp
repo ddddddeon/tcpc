@@ -34,28 +34,12 @@ int main(int argc, char *argv[]) {
 
   if (!Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa") &&
       !Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa.pub")) {
-    logger.Raw(
-        "*** No keypair found at " + ClientConfig::KeyPairPath +
-        "\nWould you like to generate a keypair at this location now?\n[y/n] ");
+    logger.Raw("*** No keypair found at " + ClientConfig::KeyPairPath +
+               "\nIf you already have a keypair somewhere else, specify the "
+               "directory with the -k flag.\n"
+               "Generating new keypair...\n");
 
-    std::string yn = "";
-    std::cin >> yn;
-
-    // TODO fix newline formatting after this
-
-    if (yn.front() == 'y' || yn.front() == 'Y') {
-      ClientConfig::GenerateKeyPair = true;
-    } else {
-      logger.Line(
-          "*** Please specify a filepath where the files `id_rsa` and "
-          "`id_rsa.pub` can be\n"
-          "found, using the -k flag.\n"
-          "Or, run this program with the -g flag to generate a new keypair,"
-          " in a directory\n"
-          "specified by the -k flag (default is " +
-          ClientConfig::KeyPairPath + ")");
-      exit(1);
-    }
+    ClientConfig::GenerateKeyPair = true;
   } else if (ClientConfig::GenerateKeyPair) {
     logger.Line(
         "*** Keypair files exist already at " + ClientConfig::KeyPairPath +
