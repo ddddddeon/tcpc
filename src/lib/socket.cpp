@@ -1,5 +1,6 @@
 #include "socket.h"
 
+#include <iostream>  // TODO remove
 #include <regex>
 
 namespace TCPChat {

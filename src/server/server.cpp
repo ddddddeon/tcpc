@@ -91,9 +91,6 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
       return;
     }
 
-    _logger.Info("*************");
-    _logger.Info(message);
-
     char first_char = message.front();
 
     if (first_char == '\n' || first_char == '\r') {
@@ -132,6 +129,7 @@ std::string Server::SetUser(std::string name, std::string message,
   std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
   std::regex_search(message, key_match, key_regex);
 
+  // TODO wrap this is some condition
   // if this is null, that's fine, just continue
   char *pubkey_string_or_null =
       (char *)RSAKeyToString(connection.PubKey, false);
@@ -142,25 +140,11 @@ std::string Server::SetUser(std::string name, std::string message,
 
   pubkey_string = std::regex_replace(pubkey_string, std::regex("\n$"), "");
 
-  _logger.Info("1. pubkey_string length from connection.PubKey: " +
-               std::to_string(pubkey_string.length()));
-
   if (key_match.length() == 0) {
     show_entered_message = false;
   } else {
     std::string match = key_match.str();
-
     pubkey_string = Socket::ExpandNewLines(match);
-
-    _logger.Info("2. key_match: " + std::to_string(key_match.length()));
-    _logger.Info(match);
-    _logger.Info("2. match: " + std::to_string(match.length()));
-
-    _logger.Info("Got public key from " + connection.Name + "(" +
-                 connection.Address + ")");
-
-    _logger.Info("2. Setting connection.Pubkey-- pubkey_string length: " +
-                 std::to_string(pubkey_string.length()));
 
     connection.PubKey =
         RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
@@ -175,11 +159,6 @@ std::string Server::SetUser(std::string name, std::string message,
   std::string db_pubkey = _db.Get(name);
 
   if (db_pubkey.length() == 0) {  // no user in db, free to create
-    _logger.Info("3. Creating user with key_match length: " +
-                 std::to_string(key_match.length()));
-    _logger.Info("3. Creating user with pubkey_string length: " +
-                 std::to_string(pubkey_string.length()));
-
     message.clear();
     _logger.Info("No user " + name + " in the db-- creating");
     _db.Set(name, pubkey_string);
@@ -192,27 +171,9 @@ std::string Server::SetUser(std::string name, std::string message,
                 connection.Name + "\n";
     }
   } else if (db_pubkey.length() > 0) {
-    _logger.Info("4. *** pubkey_string:");
-    for (int i = 0; i < pubkey_string.length(); i++) {
-      printf("%x", pubkey_string[i]);
-    }
-    printf("\n");
-
-    _logger.Info("4. pubkey_string length: " +
-                 std::to_string(pubkey_string.length()));
-
-    _logger.Info("4. db_pubkey:");
-    for (int i = 0; i < db_pubkey.length(); i++) {
-      printf("%x", db_pubkey[i]);
-    }
-    printf("\n");
-
-    _logger.Info("4. db pubkey length: " + std::to_string(db_pubkey.length()));
-    _logger.Info("4. keys are equal(0)? " +
-                 std::to_string(pubkey_string.compare(db_pubkey)));
-
     message.clear();
     // TODO handle all instances of Send() or ReadLine() for response.length 0
+
     if (pubkey_string.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
@@ -223,7 +184,7 @@ std::string Server::SetUser(std::string name, std::string message,
       if (!authenticated) {
         error = "*** Public key verification failed for " + name;
         _logger.Info(error);
-        Socket::Send(connection.Socket, error);
+        Socket::Send(connection.Socket, error + "\r\n");
       } else {
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
@@ -262,34 +223,21 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
         RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
     connection.PubKey = pubkey;
 
-    int length = 32;
-    unsigned char *bytes = GenerateRandomBytes(length);
-    char hex_string[length];
-
-    std::string alphabet =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@";
-
-    for (int i = 0; i < length; i++) {
-      hex_string[i] = alphabet[((int)bytes[i]) % 63];
-    }
-    hex_string[length] = '\0';
-
-    std::string byte_string = std::string(hex_string);
-
-    Socket::Send(connection.Socket, "/verify " + byte_string + "\r\n");
+    std::string seed = GenerateSeed(_seed_length);
+    Socket::Send(connection.Socket, "/verify " + seed + "\r\n");
     std::string response = Socket::ReadLine(connection.Socket);
 
     if (Socket::ParseVerifyMessage(response)) {
-      // TODO don't hardcode 256 here! make a KeyLength function in dcrypt?
-      unsigned char *response_bytes =
-          (unsigned char *)calloc(256, sizeof(unsigned char));
+      int sig_length = response.length();
 
-      for (int i = 0; i < 256; i++) {
+      unsigned char *response_bytes =
+          (unsigned char *)calloc(sig_length, sizeof(unsigned char));
+
+      for (int i = 0; i < sig_length; i++) {
         response_bytes[i] = (unsigned char)response[i];
       }
 
-      bool verified =
-          RSAVerify((char *)byte_string.c_str(), response_bytes, pubkey);
+      bool verified = RSAVerify((char *)seed.c_str(), response_bytes, pubkey);
 
       if (!verified) {
         return false;
@@ -352,6 +300,19 @@ int Server::Disconnect(tcp::socket &socket) {
 std::string Server::GetAddress(tcp::socket &socket) {
   return socket.remote_endpoint().address().to_string() + ":" +
          std::to_string(socket.remote_endpoint().port());
+}
+
+std::string Server::GenerateSeed(int length) {
+  unsigned char *bytes = GenerateRandomBytes(length);
+  char hex_string[length];
+  int modulus = _alphanumeric.length() - 1;
+
+  for (int i = 0; i < length; i++) {
+    hex_string[i] = _alphanumeric[(int)bytes[i] % modulus];
+  }
+  hex_string[length] = '\0';
+
+  return std::string(hex_string);
 }
 
 void Server::Stop() {

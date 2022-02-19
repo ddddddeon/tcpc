@@ -17,6 +17,7 @@ namespace ClientConfig {
 
 bool GenerateKeyPair = false;
 std::string KeyPairPath = "./";
+int KeyLength = 4096;
 std::string Name = "guest";
 std::string Host = "127.0.0.1";
 int Port = 9000;
@@ -70,12 +71,10 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  // TODO pass in a ClientConfig struct instead
   Client client(ClientConfig::Host, ClientConfig::Port, ClientConfig::Name,
                 ClientConfig::GenerateKeyPair, ClientConfig::KeyPairPath,
-                logger);
-  logger.Info(client.KeyPairPath);
-  logger.Info(client.PrivKeyFileName);
-  logger.Info(client.PubKeyFileName);
+                ClientConfig::KeyLength, logger);
 
   if (!ClientConfig::GenerateKeyPair) {
     logger.Info("Loading keypair from " + ClientConfig::KeyPairPath);
@@ -101,7 +100,7 @@ void parse_args(int argc, char *argv[]) {
   std::string localhost = "localhost";
 
   int opt;
-  while ((opt = getopt(argc, argv, ":h:p:n:gk:")) != -1) {
+  while ((opt = getopt(argc, argv, ":h:p:n:gk:l:")) != -1) {
     switch (opt) {
       case 'h':
         if (localhost.compare(optarg) != 0) {
@@ -120,6 +119,8 @@ void parse_args(int argc, char *argv[]) {
       case 'k':
         ClientConfig::KeyPairPath = optarg;
         break;
+      case 'l':
+        ClientConfig::KeyLength = atoi(optarg);
     }
   }
 }
