@@ -48,26 +48,30 @@ void Client::Connect() {
 
 void Client::ReadMessages(tcp::socket &socket) {
   int connected = 1;
-  while (connected != 0) {
-    asio::streambuf buf;
+  std::string message = "";
 
+  while (connected != 0) {
+    // TODO wrap all ReadLine calls in a try/catch like this
     try {
-      // TODO change to Transport::Readline and handle accordingly
-      size_t s = asio::read_until(socket, buf, "\n");
+      message = Transport::ReadLine(socket);
     } catch (std::exception &e) {
       _logger.Error(e.what());
       connected = 0;
     }
-
-    asio::streambuf::const_buffers_type bufs = buf.data();
-    std::string message(buffers_begin(bufs), buffers_begin(bufs) + buf.size());
     message = message.substr(0, message.size() - 1);
 
     if (Transport::ParseVerifyMessage(message)) {
       Verify(message);
 
-      asio::streambuf verified_buf;
-      std::string verified_response = Transport::ReadLine(*_socket);
+      std::string verified_response = "";
+
+      try {
+        verified_response = Transport::ReadLine(*_socket);
+      } catch (std::exception &e) {
+        _logger.Error(e.what());
+        connected = 0;
+      }
+
       _logger.Raw(verified_response);
       message.clear();
       cout << flush;
