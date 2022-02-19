@@ -228,17 +228,8 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
     std::string response = Socket::ReadLine(connection.Socket);
 
     if (Socket::ParseVerifyMessage(response)) {
-      int sig_length = response.length();
-
-      unsigned char *response_bytes =
-          (unsigned char *)calloc(sig_length, sizeof(unsigned char));
-
-      for (int i = 0; i < sig_length; i++) {
-        response_bytes[i] = (unsigned char)response[i];
-      }
-
-      bool verified = RSAVerify((char *)seed.c_str(), response_bytes, pubkey);
-
+      bool verified = RSAVerify((char *)seed.c_str(),
+                                (unsigned char *)response.c_str(), pubkey);
       if (!verified) {
         return false;
       }
