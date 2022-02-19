@@ -300,10 +300,12 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
       _logger.Info(std::to_string(key_size));
       _logger.Info(std::to_string(response.length()));
 
-      unsigned char *response_bytes =
-          (unsigned char *)calloc(key_size, sizeof(unsigned char));
+      int sig_length = response.length();
 
-      for (int i = 0; i < key_size; i++) {
+      unsigned char *response_bytes =
+          (unsigned char *)calloc(sig_length, sizeof(unsigned char));
+
+      for (int i = 0; i < sig_length; i++) {
         response_bytes[i] = (unsigned char)response[i];
         printf("i: %d rb: %x r: %x\n", i, (unsigned char)response_bytes[i],
                (unsigned char)response[i]);
