@@ -129,9 +129,13 @@ std::string Server::SetUser(std::string name, std::string message,
   bool show_entered_message = true;
   std::string error = "";
   std::smatch key_match;
-  std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
+  std::regex key_regex(
+      "-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----\\?");
   std::regex_search(message, key_match, key_regex);
 
+  // TODO properly auth if client is run with -n flag
+
+  // TODO wrap this is some condition
   // if this is null, that's fine, just continue
   char *pubkey_string_or_null =
       (char *)RSAKeyToString(connection.PubKey, false);
@@ -143,6 +147,9 @@ std::string Server::SetUser(std::string name, std::string message,
   pubkey_string = std::regex_replace(pubkey_string, std::regex("\n$"), "");
 
   _logger.Info("1. pubkey_string length from connection.PubKey: " +
+               std::to_string(pubkey_string.length()));
+
+  _logger.Info("pubkey_string length from connection.PubKey: " +
                std::to_string(pubkey_string.length()));
 
   if (key_match.length() == 0) {
@@ -213,6 +220,25 @@ std::string Server::SetUser(std::string name, std::string message,
 
     message.clear();
     // TODO handle all instances of Send() or ReadLine() for response.length 0
+
+    _logger.Info("*** pubkey_string:");
+    for (int i = 0; i < pubkey_string.length(); i++) {
+      printf("%x", pubkey_string[i]);
+    }
+    printf("\n");
+
+    _logger.Info("pubkey_string length: " +
+                 std::to_string(pubkey_string.length()));
+
+    _logger.Info("*** db_pubkey:");
+    for (int i = 0; i < db_pubkey.length(); i++) {
+      printf("%x", db_pubkey[i]);
+    }
+    printf("\n");
+
+    _logger.Info("db pubkey length: " + std::to_string(db_pubkey.length()));
+    _logger.Info(std::to_string(pubkey_string.compare(db_pubkey)));
+
     if (pubkey_string.compare(db_pubkey) != 0) {
       error = "*** Mismatched public key for " + name;
       _logger.Info(error);
@@ -277,11 +303,11 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
       unsigned char *response_bytes =
           (unsigned char *)calloc(key_size, sizeof(unsigned char));
 
-      for (int i = 0; i < key_size; i++) {
-        response_bytes[i] = (unsigned char)response[i];
-        printf("i: %d rb: %x r: %x\n", i, (unsigned char)response_bytes[i],
-               (unsigned char)response[i]);
-      }
+      // for (int i = 0; i < key_size; i++) {
+      //   response_bytes[i] = (unsigned char)response[i];
+      //   printf("i: %d rb: %x r: %x\n", i, (unsigned char)response_bytes[i],
+      //          (unsigned char)response[i]);
+      // }
 
       bool verified = RSAVerify((char *)seed.c_str(), response_bytes, pubkey);
 

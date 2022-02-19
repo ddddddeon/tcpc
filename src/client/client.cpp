@@ -154,7 +154,13 @@ void Client::GenerateKeyPair() {
   _pubkey = RSAFileToKey(pubkey_path, false);
 
   _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
+
+  _logger.Info("_pubkey_string: " + std::to_string(_pubkey_string.length()));
+
   _pubkey_string = Socket::StripNewLines(_pubkey_string);
+
+  _logger.Info("_pubkey_string: " + std::to_string(_pubkey_string.length()));
+
   _logger.Info("Generated Keypair in " + KeyPairPath);
 
   _logger.Info(_pubkey_string);
