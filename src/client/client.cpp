@@ -149,8 +149,10 @@ void Client::GenerateKeyPair() {
   // TODO free() all the resources created by these dcrypt calls
   _privkey = RSAGenerateKey(KeyLength);
 
-  char *privkey_path = (char *)(KeyPairPath + PrivKeyFileName).c_str();
-  char *pubkey_path = (char *)(KeyPairPath + PubKeyFileName).c_str();
+  std::string privkey_abs = KeyPairPath + PrivKeyFileName;
+  std::string pubkey_abs = KeyPairPath + PubKeyFileName;
+  char *privkey_path = (char *)privkey_abs.c_str();
+  char *pubkey_path = (char *)pubkey_abs.c_str();
 
   RSAKeyToFile(_privkey, privkey_path, true);
   RSAKeyToFile(_privkey, pubkey_path, false);

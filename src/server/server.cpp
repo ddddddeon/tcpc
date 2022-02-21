@@ -253,9 +253,7 @@ void Server::Broadcast(std::string message) {
 }
 
 std::string Server::NextColor() {
-  _logger.Info(std::to_string(_name_color));
   _name_color = (_name_color + 1) % 8;
-  _logger.Info(std::to_string(_name_color));
   return _colors[_name_color].code;
 }
 
