@@ -40,10 +40,10 @@ class Server {
   int _seed_length = 32;
   std::string const _alphanumeric =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  Color _colors[8] = {{"red", "\033[22;31m", "\033[01;31m"},
-                      {"blue", "\033[22;34m", "\033[01;34m"},
+  Color _colors[8] = {{"blue", "\033[22;34m", "\033[01;34m"},
                       {"green", "\033[22;32m", "\033[01;32m"},
                       {"magenta", "\033[22;35m", "\033[01;35m"},
+                      {"red", "\033[22;31m", "\033[01;31m"},
                       {"yellow", "\033[22;33m", "\033[01;33m"},
                       {"cyan", "\033[22;36m", "\033[01;36m"},
                       {"white", "\033[22;37m", "\033[01;37m"},

@@ -124,6 +124,7 @@ std::string Server::ParseSlashCommand(std::string message,
 std::string Server::SetUser(std::string name, std::string message,
                             Connection &connection) {
   bool show_entered_message = true;
+  bool show_renamed_message = false;
   std::string error = "";
   std::smatch key_match;
   std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
@@ -166,11 +167,7 @@ std::string Server::SetUser(std::string name, std::string message,
     connection.LoggedIn = true;
     Transport::Send(connection.Socket,
                     "Successfully claimed user name " + name + "\r\n");
-    if (!show_entered_message) {
-      message = "* " + connection.Color + old_name + _uncolor + " (" +
-                connection.Address + ") renamed to " + connection.Color +
-                connection.Name + _uncolor + "\n";
-    }
+    show_renamed_message = true;
   } else if (db_pubkey.length() > 0) {
     message.clear();
 
@@ -194,21 +191,10 @@ std::string Server::SetUser(std::string name, std::string message,
         if (!connection.LoggedIn) {
           Transport::Send(connection.Socket, _motd);
           connection.LoggedIn = true;
-
           connection.Color = NextColor();
-
-          // TODO DRY line 219
-          Broadcast("* " + connection.Color + connection.Name + _uncolor +
-                    " has entered the chat (" + connection.Address + ")\r\n");
-          show_entered_message = false;
-
         } else if (connection.Name.compare(old_name) != 0) {
           // TODO kick guest users around here if server is set to private
-          if (!show_entered_message) {
-            message = connection.Color + old_name + _uncolor + " (" +
-                      connection.Address + ") renamed to " + connection.Color +
-                      connection.Name + _uncolor + "\n";
-          }
+          show_renamed_message = true;
         }
       }
     }
@@ -218,7 +204,14 @@ std::string Server::SetUser(std::string name, std::string message,
     connection.Color = NextColor();
     Broadcast("* " + connection.Color + connection.Name + _uncolor +
               " has entered the chat (" + connection.Address + ")\r\n");
+    message.clear();
+  } else if (show_renamed_message) {
+    Broadcast(message = "* " + connection.Color + old_name + _uncolor + " (" +
+                        connection.Address + ") renamed to " +
+                        connection.Color + connection.Name + _uncolor + "\r\n");
+    message.clear();
   }
+
   return message;
 }
 
