@@ -149,10 +149,8 @@ void Client::GenerateKeyPair() {
   // TODO free() all the resources created by these dcrypt calls
   _privkey = RSAGenerateKey(KeyLength);
 
-  std::string privkey_abs = KeyPairPath + PrivKeyFileName;
-  std::string pubkey_abs = KeyPairPath + PubKeyFileName;
-  char *privkey_path = (char *)privkey_abs.c_str();
-  char *pubkey_path = (char *)pubkey_abs.c_str();
+  char *privkey_path = (char *)PrivKeyFileName.c_str();
+  char *pubkey_path = (char *)PubKeyFileName.c_str();
 
   RSAKeyToFile(_privkey, privkey_path, true);
   RSAKeyToFile(_privkey, pubkey_path, false);
@@ -165,8 +163,8 @@ void Client::GenerateKeyPair() {
 
 bool Client::LoadKeyPair(std::string path) {
   try {
-    _privkey = RSAFileToKey((char *)(path + PrivKeyFileName).c_str(), true);
-    _pubkey = RSAFileToKey((char *)(path + PubKeyFileName).c_str(), false);
+    _privkey = RSAFileToKey((char *)(PrivKeyFileName).c_str(), true);
+    _pubkey = RSAFileToKey((char *)(PubKeyFileName).c_str(), false);
 
     _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
     _logger.Info("Loaded key");

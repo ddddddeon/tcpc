@@ -35,8 +35,8 @@ class Client {
   int Port;
   std::string Name;
   std::string KeyPairPath = "./";
-  std::string PrivKeyFileName = "id_rsa";
-  std::string PubKeyFileName = "id_rsa.pub";
+  std::string PrivKeyFileName = "./id_rsa";
+  std::string PubKeyFileName = "./id_rsa.pub";
   int KeyLength;
 
   Client(std::string host, int port, std::string name, bool generate_keypair,
@@ -48,6 +48,10 @@ class Client {
         KeyPairPath(keypair_path),
         KeyLength(key_length) {
     _user_input.reserve(MAX_INPUT_BUFFER_SIZE);
+
+    PrivKeyFileName = KeyPairPath + "id_rsa";
+    PubKeyFileName = KeyPairPath + "id_rsa.pub";
+
     if (generate_keypair) {
       GenerateKeyPair();
     }
