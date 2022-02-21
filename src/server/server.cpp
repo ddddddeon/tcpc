@@ -131,7 +131,6 @@ std::string Server::SetUser(std::string name, std::string message,
   std::regex_search(message, key_match, key_regex);
 
   // TODO wrap this is some condition
-  // if this is null, that's fine, just continue
   char *pubkey_string_or_null =
       (char *)RSAKeyToString(connection.PubKey, false);
 
@@ -186,7 +185,7 @@ std::string Server::SetUser(std::string name, std::string message,
         connection.Name = name;
         _logger.Info("Successfully authenticated " + name);
         Transport::Send(connection.Socket,
-                        "Successfully authenticated you as " + name + "\r\n");
+                        "Successfully authenticated as " + name + "\r\n");
 
         if (!connection.LoggedIn) {
           Transport::Send(connection.Socket, _motd);
