@@ -11,9 +11,16 @@
 #include "../lib/db.h"
 #include "../lib/logger.h"
 #include "connection.h"
+
 using asio::ip::tcp;
 
 namespace TCPChat {
+
+struct Color {
+  std::string name;
+  std::string code;
+  std::string bold_code;
+};
 
 class Server {
  private:
@@ -33,6 +40,16 @@ class Server {
   int _seed_length = 32;
   std::string const _alphanumeric =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  Color _colors[8] = {{"red", "\033[22;31m", "\033[01;31m"},
+                      {"blue", "\033[22;34m", "\033[01;34m"},
+                      {"green", "\033[22;32m", "\033[01;32m"},
+                      {"magenta", "\033[22;35m", "\033[01;35m"},
+                      {"yellow", "\033[22;33m", "\033[01;33m"},
+                      {"cyan", "\033[22;36m", "\033[01;36m"},
+                      {"white", "\033[22;37m", "\033[01;37m"},
+                      {"none", "\033[22;0m", "\033[22;0m"}};
+  int _name_color = 7;
+  std::string _uncolor = _colors[7].code;
 
   std::string LoadMOTD(std::string path);
   void Handle(tcp::socket &socket, Connection &connection);
@@ -41,9 +58,10 @@ class Server {
                       Connection &connection);
   bool Authenticate(std::string pubkey_string, Connection &connection);
   void Broadcast(std::string message);
-  int Disconnect(tcp::socket &socket);
+  std::string NextColor();
   std::string GetAddress(tcp::socket &socket);
   std::string GenerateSeed(int length);
+  int Disconnect(tcp::socket &socket);
 
  public:
   Server(asio::ip::address_v4 interface, int port, DB &db,

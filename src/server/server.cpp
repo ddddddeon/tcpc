@@ -102,7 +102,7 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
     }
 
     if (message.length() > 0) {
-      Broadcast("[" + connection.Name + "] " +
+      Broadcast("[" + connection.Color + connection.Name + _uncolor + "] " +
                 message.substr(0, message.length() - 1) + "\r\n");
     }
   }
@@ -167,8 +167,9 @@ std::string Server::SetUser(std::string name, std::string message,
     Transport::Send(connection.Socket,
                     "Successfully claimed user name " + name + "\r\n");
     if (!show_entered_message) {
-      message = old_name + " (" + connection.Address + ") renamed to " +
-                connection.Name + "\n";
+      message = "* " + connection.Color + old_name + _uncolor + " (" +
+                connection.Address + ") renamed to " + connection.Color +
+                connection.Name + _uncolor + "\n";
     }
   } else if (db_pubkey.length() > 0) {
     message.clear();
@@ -193,15 +194,20 @@ std::string Server::SetUser(std::string name, std::string message,
         if (!connection.LoggedIn) {
           Transport::Send(connection.Socket, _motd);
           connection.LoggedIn = true;
-          Broadcast(connection.Name + " has entered the chat (" +
-                    connection.Address + ")\r\n");
+
+          connection.Color = NextColor();
+
+          // TODO DRY line 219
+          Broadcast("* " + connection.Color + connection.Name + _uncolor +
+                    " has entered the chat (" + connection.Address + ")\r\n");
           show_entered_message = false;
 
         } else if (connection.Name.compare(old_name) != 0) {
           // TODO kick guest users around here if server is set to private
           if (!show_entered_message) {
-            message = old_name + " (" + connection.Address + ") renamed to " +
-                      connection.Name + "\n";
+            message = connection.Color + old_name + _uncolor + " (" +
+                      connection.Address + ") renamed to " + connection.Color +
+                      connection.Name + _uncolor + "\n";
           }
         }
       }
@@ -209,8 +215,9 @@ std::string Server::SetUser(std::string name, std::string message,
   }
 
   if (show_entered_message) {
-    Broadcast(connection.Name + " has entered the chat (" + connection.Address +
-              ")\r\n");
+    connection.Color = NextColor();
+    Broadcast("* " + connection.Color + connection.Name + _uncolor +
+              " has entered the chat (" + connection.Address + ")\r\n");
   }
   return message;
 }
@@ -253,6 +260,31 @@ void Server::Broadcast(std::string message) {
   sockets_lock.unlock();
 }
 
+std::string Server::NextColor() {
+  _logger.Info(std::to_string(_name_color));
+  _name_color = (_name_color + 1) % 8;
+  _logger.Info(std::to_string(_name_color));
+  return _colors[_name_color].code;
+}
+
+std::string Server::GetAddress(tcp::socket &socket) {
+  return socket.remote_endpoint().address().to_string() + ":" +
+         std::to_string(socket.remote_endpoint().port());
+}
+
+std::string Server::GenerateSeed(int length) {
+  unsigned char *bytes = GenerateRandomBytes(length);
+  char hex_string[length];
+  int modulus = _alphanumeric.length() - 1;
+
+  for (int i = 0; i < length; i++) {
+    hex_string[i] = _alphanumeric[(int)bytes[i] % modulus];
+  }
+  hex_string[length] = '\0';
+
+  return std::string(hex_string);
+}
+
 int Server::Disconnect(tcp::socket &socket) {
   std::string address = GetAddress(socket);
   std::string user_name;
@@ -281,27 +313,10 @@ int Server::Disconnect(tcp::socket &socket) {
   }
 
   _logger.Info("Received disconnect from " + address);
-  Broadcast(user_name + " has left the chat (" + address + ")\r\n");
+  Broadcast(connection->Color + user_name + _uncolor + " has left the chat (" +
+            address + ")\r\n");
 
   return 0;
-}
-
-std::string Server::GetAddress(tcp::socket &socket) {
-  return socket.remote_endpoint().address().to_string() + ":" +
-         std::to_string(socket.remote_endpoint().port());
-}
-
-std::string Server::GenerateSeed(int length) {
-  unsigned char *bytes = GenerateRandomBytes(length);
-  char hex_string[length];
-  int modulus = _alphanumeric.length() - 1;
-
-  for (int i = 0; i < length; i++) {
-    hex_string[i] = _alphanumeric[(int)bytes[i] % modulus];
-  }
-  hex_string[length] = '\0';
-
-  return std::string(hex_string);
 }
 
 void Server::Stop() {

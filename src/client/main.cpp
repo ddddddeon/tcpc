@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
   if (!Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa") &&
       !Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa.pub")) {
     logger.Raw("*** No keypair found at " + ClientConfig::KeyPairPath +
-               "\nIf you already have a keypair somewhere else, specify the "
-               "directory with the -k flag.\n"
+               "\nIf you already have a keypair elsewhere, specify a directory"
+               "\nwith the -k flag.\n"
                "Generating new keypair...\n");
 
     ClientConfig::GenerateKeyPair = true;

@@ -4,6 +4,7 @@
 #include <dcrypt.h>
 
 #include <asio.hpp>
+#include <string>
 
 using asio::ip::tcp;
 
@@ -14,6 +15,7 @@ class Connection {
   std::string Name;
   std::string Address;
   tcp::socket &Socket;
+  std::string Color;
   DCRYPT_PKEY *PubKey = nullptr;
   bool LoggedIn;
 
