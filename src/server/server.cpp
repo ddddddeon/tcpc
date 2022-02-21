@@ -183,7 +183,8 @@ std::string Server::SetUser(std::string name, std::string message,
         Transport::Send(connection.Socket, error + "\r\n");
       } else {
         connection.Name = name;
-        _logger.Info("Successfully authenticated " + name);
+        _logger.Info("Successfully authenticated " + connection.Color + name +
+                     _uncolor);
         Transport::Send(connection.Socket,
                         "Successfully authenticated as " + name + "\r\n");
 
@@ -264,15 +265,15 @@ std::string Server::GetAddress(tcp::socket &socket) {
 
 std::string Server::GenerateSeed(int length) {
   unsigned char *bytes = GenerateRandomBytes(length);
-  char hex_string[length];
+  char seed[length];
   int modulus = _alphanumeric.length() - 1;
 
   for (int i = 0; i < length; i++) {
-    hex_string[i] = _alphanumeric[(int)bytes[i] % modulus];
+    seed[i] = _alphanumeric[(int)bytes[i] % modulus];
   }
-  hex_string[length] = '\0';
+  seed[length] = '\0';
 
-  return std::string(hex_string);
+  return std::string(seed, length);
 }
 
 int Server::Disconnect(tcp::socket &socket) {
