@@ -183,8 +183,7 @@ std::string Server::SetUser(std::string name, std::string message,
         Transport::Send(connection.Socket, error + "\r\n");
       } else {
         connection.Name = name;
-        _logger.Info("Successfully authenticated " + connection.Color + name +
-                     _uncolor);
+        _logger.Info("Successfully authenticated " + name);
         Transport::Send(connection.Socket,
                         "Successfully authenticated as " + name + "\r\n");
 
