@@ -1,7 +1,7 @@
 SERVER_NAME=server
 CLIENT_NAME=client
 LIBS=-lpthread -lcrypto -lleveldb -ldcrypt
-CFLAGS=-g -Wall -fuse-ld=lld $(LIBS) #-fsanitize=address -fsanitize=memory -fsanitize=thread
+CFLAGS=-g -Wall -fuse-ld=lld $(LIBS)#-fsanitize=address -fsanitize=memory -fsanitize=thread
 
 CC=clang++
 SERVER_OUTFILE=bin/$(SERVER_NAME)
