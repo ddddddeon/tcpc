@@ -191,7 +191,7 @@ std::string Server::SetUser(std::string name, std::string message,
           Transport::Send(connection.Socket, _motd);
           connection.LoggedIn = true;
           connection.Color = NextColor();
-        } else if (connection.Name.compare(old_name) != 0) {
+        } else {
           // TODO kick guest users around here if server is set to private
           show_renamed_message = true;
         }
