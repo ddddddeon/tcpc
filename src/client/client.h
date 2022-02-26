@@ -13,6 +13,15 @@ using asio::ip::tcp;
 
 namespace TCPChat {
 
+struct ClientConfig {
+  bool GenerateKeyPair;
+  std::string KeyPairPath;
+  int KeyLength;
+  std::string Name;
+  std::string Host;
+  int Port;
+};
+
 class Client {
  private:
   Logger _logger;
@@ -39,20 +48,19 @@ class Client {
   std::string PubKeyFileName = "./id_rsa.pub";
   int KeyLength;
 
-  Client(std::string host, int port, std::string name, bool generate_keypair,
-         std::string keypair_path, int key_length, Logger &logger)
+  Client(ClientConfig &config, Logger &logger)
       : _logger(logger),
-        Host(host),
-        Port(port),
-        Name(name),
-        KeyPairPath(keypair_path),
-        KeyLength(key_length) {
+        Host(config.Host),
+        Port(config.Port),
+        Name(config.Name),
+        KeyPairPath(config.KeyPairPath),
+        KeyLength(config.KeyLength) {
     _user_input.reserve(MAX_INPUT_BUFFER_SIZE);
 
     PrivKeyFileName = KeyPairPath + "id_rsa";
     PubKeyFileName = KeyPairPath + "id_rsa.pub";
 
-    if (generate_keypair) {
+    if (config.GenerateKeyPair) {
       GenerateKeyPair();
     }
   }

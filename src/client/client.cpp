@@ -47,7 +47,6 @@ void Client::ReadMessages(tcp::socket &socket) {
   std::string message = "";
 
   while (connected != 0) {
-    // TODO wrap all ReadLine calls in a try/catch like this
     try {
       message = Transport::ReadLine(socket);
     } catch (std::exception &e) {
@@ -75,7 +74,6 @@ void Client::ReadMessages(tcp::socket &socket) {
       _logger.Flush();
 
       if (_user_input.length() != 0) {
-        // TODO use _logger.Raw for things like this
         _logger.Raw("\r");
       }
 
@@ -174,19 +172,24 @@ bool Client::LoadKeyPair(std::string path) {
 }
 
 void Client::Authenticate() {
-  std::string motd = Transport::ReadLine(*_socket);
-  _logger.Raw(motd);
+  try {
+    std::string motd = Transport::ReadLine(*_socket);
+    _logger.Raw(motd);
 
-  std::string response = Transport::ReadLine(*_socket);
-  _logger.Raw(response);
+    std::string response = Transport::ReadLine(*_socket);
+    _logger.Raw(response);
 
-  Transport::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
+    Transport::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-  std::string nonce_response = Transport::ReadLine(*_socket);
-  nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
+    std::string nonce_response = Transport::ReadLine(*_socket);
+    nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
-  if (Transport::ParseVerifyMessage(nonce_response)) {
-    Verify(nonce_response);
+    if (Transport::ParseVerifyMessage(nonce_response)) {
+      Verify(nonce_response);
+    }
+  } catch (std::exception &e) {
+    _logger.Error(e.what());
+    exit(1);
   }
 }
 
@@ -198,9 +201,14 @@ void Client::Verify(std::string response) {
     signature_string[i] = signature[i];
   }
 
-  Transport::Send(*_socket, "/verify " + signature_string + "\n");
-  std::string verified_response = Transport::ReadLine(*_socket);
-  _logger.Raw(verified_response);
+  try {
+    Transport::Send(*_socket, "/verify " + signature_string + "\n");
+    std::string verified_response = Transport::ReadLine(*_socket);
+    _logger.Raw(verified_response);
+  } catch (std::exception &e) {
+    _logger.Error(e.what());
+    exit(1);
+  }
 }
 
 }  // namespace TCPChat

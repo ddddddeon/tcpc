@@ -13,36 +13,34 @@
 
 using namespace TCPChat;
 
-namespace ClientConfig {
-
-bool GenerateKeyPair = false;
-std::string KeyPairPath = "./";
-int KeyLength = 4096;
-std::string Name = "guest";
-std::string Host = "127.0.0.1";
-int Port = 9000;
-
-}  // namespace ClientConfig
+ClientConfig config = {
+    false,        // GenerateKeyPair
+    "./",         // KeyPairPath
+    4096,         // KeyLength
+    "guest",      // Name
+    "127.0.0.1",  // Host
+    9000          // Port
+};
 
 int main(int argc, char *argv[]) {
   Logger logger;
   parse_args(argc, argv);
 
-  if (ClientConfig::KeyPairPath.back() != '/') {
-    ClientConfig::KeyPairPath += '/';
+  if (config.KeyPairPath.back() != '/') {
+    config.KeyPairPath += '/';
   }
 
-  if (!Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa") &&
-      !Filesystem::FileExists(ClientConfig::KeyPairPath + "id_rsa.pub")) {
-    logger.Raw("*** No keypair found at " + ClientConfig::KeyPairPath +
+  if (!Filesystem::FileExists(config.KeyPairPath + "id_rsa") &&
+      !Filesystem::FileExists(config.KeyPairPath + "id_rsa.pub")) {
+    logger.Raw("*** No keypair found at " + config.KeyPairPath +
                "\nIf you already have a keypair elsewhere, specify a directory"
                "\nwith the -k flag.\n"
                "Generating new keypair...\n");
 
-    ClientConfig::GenerateKeyPair = true;
-  } else if (ClientConfig::GenerateKeyPair) {
+    config.GenerateKeyPair = true;
+  } else if (config.GenerateKeyPair) {
     logger.Line(
-        "*** Keypair files exist already at " + ClientConfig::KeyPairPath +
+        "*** Keypair files exist already at " + config.KeyPairPath +
         "\nOverwriting these files would mean you will no longer be "
         "able to authenticate\n"
         "with ANY usernames you've used in the past. I'm afraid I can't "
@@ -55,14 +53,11 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  // TODO pass in a ClientConfig struct instead
-  Client client(ClientConfig::Host, ClientConfig::Port, ClientConfig::Name,
-                ClientConfig::GenerateKeyPair, ClientConfig::KeyPairPath,
-                ClientConfig::KeyLength, logger);
+  Client client(config, logger);
 
-  if (!ClientConfig::GenerateKeyPair) {
-    logger.Info("Loading keypair from " + ClientConfig::KeyPairPath);
-    bool loaded = client.LoadKeyPair(ClientConfig::KeyPairPath);
+  if (!config.GenerateKeyPair) {
+    logger.Info("Loading keypair from " + config.KeyPairPath);
+    bool loaded = client.LoadKeyPair(config.KeyPairPath);
 
     if (!loaded) {
       logger.Error(
@@ -88,23 +83,23 @@ void parse_args(int argc, char *argv[]) {
     switch (opt) {
       case 'h':
         if (localhost.compare(optarg) != 0) {
-          ClientConfig::Host = optarg;
+          config.Host = optarg;
         }
         break;
       case 'p':
-        ClientConfig::Port = atoi(optarg);
+        config.Port = atoi(optarg);
         break;
       case 'n':
-        ClientConfig::Name = optarg;
+        config.Name = optarg;
         break;
       case 'g':
-        ClientConfig::GenerateKeyPair = true;
+        config.GenerateKeyPair = true;
         break;
       case 'k':
-        ClientConfig::KeyPairPath = optarg;
+        config.KeyPairPath = optarg;
         break;
       case 'l':
-        ClientConfig::KeyLength = atoi(optarg);
+        config.KeyLength = atoi(optarg);
     }
   }
 }
