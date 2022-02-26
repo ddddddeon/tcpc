@@ -21,6 +21,7 @@ class Logger {
   void Log(std::string str);
   void Line(std::string std);
   void Raw(std::string str);
+  void Flush();
 };
 
 }  // namespace TCPChat

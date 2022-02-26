@@ -12,9 +12,6 @@
 #include "../lib/transport.h"
 
 using asio::ip::tcp;
-using std::cout;
-using std::endl;
-using std::flush;
 
 namespace TCPChat {
 
@@ -32,7 +29,6 @@ void Client::Connect() {
   tcp::socket socket(service);
   _socket = &socket;
 
-  // TODO use mutex for socket
   socket.connect(tcp::endpoint(asio::ip::address::from_string(Host), Port));
 
   Authenticate();
@@ -74,13 +70,13 @@ void Client::ReadMessages(tcp::socket &socket) {
 
       _logger.Raw(verified_response);
       message.clear();
-      cout << flush;
+      _logger.Flush();
     } else {
-      cout << flush;
+      _logger.Flush();
 
       if (_user_input.length() != 0) {
         // TODO use _logger.Raw for things like this
-        cout << '\r' << flush;
+        _logger.Raw("\r");
       }
 
       std::string padding;
@@ -90,8 +86,8 @@ void Client::ReadMessages(tcp::socket &socket) {
       }
       std::string padded_message = message + padding + "\r\n";
 
-      cout << padded_message << flush;
-      cout << _user_input << flush;
+      _logger.Raw(padded_message);
+      _logger.Raw(_user_input);
     }
   }
 }
@@ -103,7 +99,7 @@ void Client::ProcessInputChar() {
   if (c == 3) {
     // exit raw mode
     system("stty -raw");
-    cout << endl;
+    _logger.Raw("\n");
     exit(0);
   }
 
@@ -112,30 +108,30 @@ void Client::ProcessInputChar() {
     int input_length = _user_input.length();
 
     if (input_length > 0) {
-      asio::write(*_socket, asio::buffer(_user_input + '\n'));
+      Transport::Send(*_socket, _user_input + '\n');
     }
 
     _user_input.clear();
 
-    cout << '\r' << std::string(_term_width, ' ');
+    _logger.Raw("\r" + std::string(_term_width, ' '));
     if (input_length > _term_width) {
       int n_lines = input_length / _term_width;
 
       for (int i = 0; i < n_lines; i++) {
         // Move up one line
-        cout << "\033[A\r";
+        _logger.Raw("\033[A\r");
       }
 
-      cout << flush;
+      _logger.Flush();
     }
-    cout << '\r' << flush;
+    _logger.Raw("\r");
   }
 
   // Backspace
   else if (c == '\b') {
     _user_input = _user_input.substr(0, _user_input.length() - 1);
-    cout << '\r' << std::string(_term_width, ' ') << flush;
-    cout << '\r' << _user_input << flush;
+    _logger.Raw("\r" + std::string(_term_width, ' '));
+    _logger.Raw("\r" + _user_input);
   }
 
   // Any other char
@@ -193,6 +189,7 @@ void Client::Authenticate() {
     Verify(nonce_response);
   }
 }
+
 void Client::Verify(std::string response) {
   unsigned char *signature = RSASign((char *)response.c_str(), _privkey);
 
