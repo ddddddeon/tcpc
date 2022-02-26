@@ -130,7 +130,6 @@ std::string Server::SetUser(std::string name, std::string message,
   std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
   std::regex_search(message, key_match, key_regex);
 
-  // TODO wrap this is some condition
   char *pubkey_string_or_null =
       (char *)RSAKeyToString(connection.PubKey, false);
 
