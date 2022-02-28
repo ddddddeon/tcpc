@@ -12,6 +12,7 @@
 #include "../lib/transport.h"
 
 using asio::ip::tcp;
+using std::string;
 
 namespace TCPChat {
 
@@ -44,7 +45,7 @@ void Client::Connect() {
 
 void Client::ReadMessages(tcp::socket &socket) {
   int connected = 1;
-  std::string message = "";
+  string message = "";
 
   while (connected != 0) {
     try {
@@ -58,7 +59,7 @@ void Client::ReadMessages(tcp::socket &socket) {
     if (Transport::ParseVerifyMessage(message)) {
       Verify(message);
 
-      std::string verified_response = "";
+      string verified_response = "";
 
       try {
         verified_response = Transport::ReadLine(*_socket);
@@ -77,12 +78,12 @@ void Client::ReadMessages(tcp::socket &socket) {
         _logger.Raw("\r");
       }
 
-      std::string padding;
+      string padding;
       int overflow = _user_input.length() - message.length();
       if (overflow > 0) {
-        padding = std::string(overflow, ' ');
+        padding = string(overflow, ' ');
       }
-      std::string padded_message = message + padding + "\r\n";
+      string padded_message = message + padding + "\r\n";
 
       _logger.Raw(padded_message);
       _logger.Raw(_user_input);
@@ -111,7 +112,7 @@ void Client::ProcessInputChar() {
 
     _user_input.clear();
 
-    _logger.Raw("\r" + std::string(_term_width, ' '));
+    _logger.Raw("\r" + string(_term_width, ' '));
     if (input_length > _term_width) {
       int n_lines = input_length / _term_width;
 
@@ -128,7 +129,7 @@ void Client::ProcessInputChar() {
   // Backspace
   else if (c == '\b') {
     _user_input = _user_input.substr(0, _user_input.length() - 1);
-    _logger.Raw("\r" + std::string(_term_width, ' '));
+    _logger.Raw("\r" + string(_term_width, ' '));
     _logger.Raw("\r" + _user_input);
   }
 
@@ -149,39 +150,39 @@ void Client::GenerateKeyPair() {
   RSAKeyToFile(_privkey, privkey_path, true);
   RSAKeyToFile(_privkey, pubkey_path, false);
   _pubkey = RSAFileToKey(pubkey_path, false);
-  _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
+  _pubkey_string = string((char *)RSAKeyToString(_pubkey, false));
   _pubkey_string = Transport::StripNewLines(_pubkey_string);
 
   _logger.Info("Generated Keypair in " + KeyPairPath);
 }
 
-bool Client::LoadKeyPair(std::string path) {
+bool Client::LoadKeyPair(string path) {
   try {
     _privkey = RSAFileToKey((char *)(PrivKeyFileName).c_str(), true);
     _pubkey = RSAFileToKey((char *)(PubKeyFileName).c_str(), false);
 
-    _pubkey_string = std::string((char *)RSAKeyToString(_pubkey, false));
+    _pubkey_string = string((char *)RSAKeyToString(_pubkey, false));
     _logger.Info("Loaded key");
     _pubkey_string = Transport::StripNewLines(_pubkey_string);
 
     return true;
   } catch (std::exception &e) {
-    _logger.Warn("Could not load keypair - " + std::string(e.what()));
+    _logger.Warn("Could not load keypair - " + string(e.what()));
     return false;
   }
 }
 
 void Client::Authenticate() {
   try {
-    std::string motd = Transport::ReadLine(*_socket);
+    string motd = Transport::ReadLine(*_socket);
     _logger.Raw(motd);
 
-    std::string response = Transport::ReadLine(*_socket);
+    string response = Transport::ReadLine(*_socket);
     _logger.Raw(response);
 
     Transport::Send(*_socket, "/" + Name + " " + _pubkey_string + "\n");
 
-    std::string nonce_response = Transport::ReadLine(*_socket);
+    string nonce_response = Transport::ReadLine(*_socket);
     nonce_response = nonce_response.substr(0, nonce_response.size() - 1);
 
     if (Transport::ParseVerifyMessage(nonce_response)) {
@@ -193,17 +194,17 @@ void Client::Authenticate() {
   }
 }
 
-void Client::Verify(std::string response) {
+void Client::Verify(string response) {
   unsigned char *signature = RSASign((char *)response.c_str(), _privkey);
 
-  std::string signature_string(strlen((char *)signature), '\0');
+  string signature_string(strlen((char *)signature), '\0');
   for (int i = 0; i < strlen((char *)signature); i++) {
     signature_string[i] = signature[i];
   }
 
   try {
     Transport::Send(*_socket, "/verify " + signature_string + "\n");
-    std::string verified_response = Transport::ReadLine(*_socket);
+    string verified_response = Transport::ReadLine(*_socket);
     _logger.Raw(verified_response);
   } catch (std::exception &e) {
     _logger.Error(e.what());

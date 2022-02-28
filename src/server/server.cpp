@@ -16,6 +16,7 @@
 
 using asio::ip::tcp;
 using std::mutex;
+using std::string;
 using std::unique_lock;
 
 namespace TCPChat {
@@ -52,8 +53,8 @@ void Server::Start() {
   }
 }
 
-std::string Server::LoadMOTD(std::string path) {
-  std::string motd = Filesystem::FileToString(path);
+string Server::LoadMOTD(string path) {
+  string motd = Filesystem::FileToString(path);
   if (motd.length() != 0) {
     motd = std::regex_replace(motd, std::regex("\n"), "\r\n");
 
@@ -77,7 +78,7 @@ std::string Server::LoadMOTD(std::string path) {
 void Server::Handle(tcp::socket &socket, Connection &connection) {
   int connected = 1;
   while (connected == 1) {
-    std::string message = "";
+    string message = "";
 
     if (!connection.LoggedIn && connection.Name.compare("guest") == 0) {
       connection.LoggedIn = true;
@@ -108,8 +109,7 @@ void Server::Handle(tcp::socket &socket, Connection &connection) {
   }
 }
 
-std::string Server::ParseSlashCommand(std::string message,
-                                      Connection &connection) {
+string Server::ParseSlashCommand(string message, Connection &connection) {
   std::smatch name_match;
   std::regex name_regex("[A-Za-z0-9]+");
   std::regex_search(message, name_match, name_regex);
@@ -121,11 +121,10 @@ std::string Server::ParseSlashCommand(std::string message,
   return message;
 }
 
-std::string Server::SetUser(std::string name, std::string message,
-                            Connection &connection) {
+string Server::SetUser(string name, string message, Connection &connection) {
   bool show_entered_message = true;
   bool show_renamed_message = false;
-  std::string error = "";
+  string error = "";
   std::smatch key_match;
   std::regex key_regex("-----BEGIN PUBLIC KEY-----.*-----END PUBLIC KEY-----?");
   std::regex_search(message, key_match, key_regex);
@@ -133,16 +132,15 @@ std::string Server::SetUser(std::string name, std::string message,
   char *pubkey_string_or_null =
       (char *)RSAKeyToString(connection.PubKey, false);
 
-  std::string pubkey_string = pubkey_string_or_null != nullptr
-                                  ? std::string(pubkey_string_or_null)
-                                  : "";
+  string pubkey_string =
+      pubkey_string_or_null != nullptr ? string(pubkey_string_or_null) : "";
 
   pubkey_string = std::regex_replace(pubkey_string, std::regex("\n$"), "");
 
   if (key_match.length() == 0) {
     show_entered_message = false;
   } else {
-    std::string match = key_match.str();
+    string match = key_match.str();
     pubkey_string = Transport::ExpandNewLines(match);
 
     connection.PubKey =
@@ -154,8 +152,8 @@ std::string Server::SetUser(std::string name, std::string message,
     }
   }
 
-  std::string old_name = connection.Name;
-  std::string db_pubkey = _db.Get(name);
+  string old_name = connection.Name;
+  string db_pubkey = _db.Get(name);
 
   if (db_pubkey.length() == 0) {
     message.clear();
@@ -213,15 +211,15 @@ std::string Server::SetUser(std::string name, std::string message,
   return message;
 }
 
-bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
+bool Server::Authenticate(string pubkey_string, Connection &connection) {
   try {
     DCRYPT_PKEY *pubkey =
         RSAStringToKey((unsigned char *)pubkey_string.c_str(), false);
     connection.PubKey = pubkey;
 
-    std::string seed = GenerateSeed(_seed_length);
+    string seed = GenerateSeed(_seed_length);
     Transport::Send(connection.Socket, "/verify " + seed + "\r\n");
-    std::string response = Transport::ReadLine(connection.Socket);
+    string response = Transport::ReadLine(connection.Socket);
 
     if (Transport::ParseVerifyMessage(response)) {
       bool verified = RSAVerify((char *)seed.c_str(),
@@ -240,7 +238,7 @@ bool Server::Authenticate(std::string pubkey_string, Connection &connection) {
   }
 }
 
-void Server::Broadcast(std::string message) {
+void Server::Broadcast(string message) {
   asio::error_code ignored;
   unique_lock<mutex> sockets_lock(_sockets_mutex);
   auto socket = _sockets.begin();
@@ -251,17 +249,17 @@ void Server::Broadcast(std::string message) {
   sockets_lock.unlock();
 }
 
-std::string Server::NextColor() {
+string Server::NextColor() {
   _name_color = (_name_color + 1) % 8;
   return _colors[_name_color].code;
 }
 
-std::string Server::GetAddress(tcp::socket &socket) {
+string Server::GetAddress(tcp::socket &socket) {
   return socket.remote_endpoint().address().to_string() + ":" +
          std::to_string(socket.remote_endpoint().port());
 }
 
-std::string Server::GenerateSeed(int length) {
+string Server::GenerateSeed(int length) {
   unsigned char *bytes = GenerateRandomBytes(length);
   char seed[length];
   int modulus = _alphanumeric.length() - 1;
@@ -271,12 +269,12 @@ std::string Server::GenerateSeed(int length) {
   }
   seed[length] = '\0';
 
-  return std::string(seed, length);
+  return string(seed, length);
 }
 
 int Server::Disconnect(tcp::socket &socket) {
-  std::string address = GetAddress(socket);
-  std::string user_name;
+  string address = GetAddress(socket);
+  string user_name;
 
   auto connection = _connections.begin();
   while (connection != _connections.end()) {
