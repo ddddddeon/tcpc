@@ -1,8 +1,7 @@
 #include <iostream>
 
-#include "../src/lib/crypto.h"
-#include "crypto.h"
+namespace TCPChat {
 
-using namespace TCPChat;
+int main(int argc, char *argv[]) {}
 
-int main(int argc, char *argv[]) { test_crypto(); }
+}  // namespace TCPChat
