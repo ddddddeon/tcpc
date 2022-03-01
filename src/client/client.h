@@ -65,6 +65,12 @@ class Client {
     }
   }
 
+  ~Client() {
+    DCRYPT_PKEY_free(_privkey);
+    DCRYPT_PKEY_free(_pubkey);
+    free(&_pubkey_string);
+  }
+
   void Connect();
   bool LoadKeyPair(std::string path);
 };

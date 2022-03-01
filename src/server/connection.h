@@ -21,6 +21,8 @@ class Connection {
 
   Connection(tcp::socket &socket, std::string name, std::string address)
       : Name(name), Address(address), Socket(socket), LoggedIn(false) {}
+
+  ~Connection() { DCRYPT_PKEY_free(PubKey); }
 };
 
 }  // namespace TCPChat

@@ -1,5 +1,6 @@
 #include "server.h"
 
+#include <dcrypt.h>
 #include <leveldb/db.h>
 
 #include <asio.hpp>
@@ -134,7 +135,7 @@ string Server::SetUser(string name, string message, Connection &connection) {
 
   string pubkey_string =
       pubkey_string_or_null != nullptr ? string(pubkey_string_or_null) : "";
-
+  free(pubkey_string_or_null);
   pubkey_string = std::regex_replace(pubkey_string, std::regex("\n$"), "");
 
   if (key_match.length() == 0) {
@@ -269,6 +270,7 @@ string Server::GenerateSeed(int length) {
   }
   seed[length] = '\0';
 
+  free(bytes);
   return string(seed, length);
 }
 
@@ -293,6 +295,7 @@ int Server::Disconnect(tcp::socket &socket) {
       unique_lock<mutex> connections_lock(_connections_mutex);
       _connections.erase(connection);
       connections_lock.unlock();
+      DCRYPT_PKEY_free(connection->PubKey);
 
       break;
     }
