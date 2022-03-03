@@ -1,6 +1,7 @@
 #include "filesystem.h"
 
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include <fstream>
 #include <sstream>
@@ -27,6 +28,13 @@ std::string FileToString(std::string path) {
   } catch (std::exception &e) {
     return "";
   }
+}
+
+bool MkDir(std::string path) {
+  if (mkdir(path.c_str(), 0700) == -1) {
+    return false;
+  }
+  return true;
 }
 
 }  // namespace Filesystem

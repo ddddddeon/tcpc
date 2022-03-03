@@ -1,6 +1,7 @@
 #include "main.h"
 
 #include <getopt.h>
+#include <pwd.h>
 #include <signal.h>
 #include <sys/stat.h>
 
@@ -11,11 +12,11 @@
 #include "../lib/logger.h"
 #include "client.h"
 
-using namespace TCPChat;
+using namespace TCPC;
 
 ClientConfig config = {
     false,        // GenerateKeyPair
-    "./",         // KeyPairPath
+    ".tcpc",      // KeyPairPath
     4096,         // KeyLength
     "guest",      // Name
     "127.0.0.1",  // Host
@@ -23,6 +24,13 @@ ClientConfig config = {
 };
 
 int main(int argc, char *argv[]) {
+  char *home_dir;
+  if ((home_dir = getenv("HOME")) == NULL) {
+    home_dir = getpwuid(getuid())->pw_dir;
+  }
+  config.KeyPairPath = std::string(home_dir) + "/" + config.KeyPairPath;
+  Filesystem::MkDir(config.KeyPairPath);
+
   Logger logger;
   parse_args(argc, argv);
 

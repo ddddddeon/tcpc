@@ -9,6 +9,7 @@ namespace Filesystem {
 
 bool FileExists(std::string path);
 std::string FileToString(std::string path);
+bool MkDir(std::string path);
 
 }  // namespace Filesystem
 
