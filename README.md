@@ -5,7 +5,7 @@ A TCP socket-based, public-key authenticated, command-line client/server chat ap
 ## Installation
 This application targets Linux only at the present, and depends on [dcrypt](https://github.com/ddddddeon/dcrypt), which itself depends on the OpenSSL `libcrypto` library. Both `TCPC` and `dcrypt` use the clang toolchain for compilation and linking, but the `Makefile` can be tweaked to use GNU build tools instead if you like. As it is, you will need 
 
-```bash
+```
 // Install openssl, clang and lld-- for example in Ubuntu:
 sudo apt-get install libssl-dev clang lld-12
 
@@ -37,7 +37,7 @@ tcpc-server -i 0.0.0.0 -p 3030
 The first time the client application is run, an RSA keypair will be generated and written to disk. The user can also specify a filepath pointing to an existing keypair. The client user will be able to claim usernames and associate them with their public key, and will have to use the same keypair to authenticate with these usernames going forward.
 
 To run the client:
-```bash
+```
 // If no host or port are specified, localhost and 9000 are the respective defaults
 tcpc -h <host> -p <port>
 
