@@ -9,7 +9,7 @@
 #include "../lib/logger.h"
 #include "server.h"
 
-using namespace TCPChat;
+using namespace TCPC;
 
 namespace ServerConfig {
 

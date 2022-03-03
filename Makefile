@@ -6,22 +6,22 @@ CFLAGS=-g -Wall -fuse-ld=lld $(LIBS)#-fsanitize=address -fsanitize=memory -fsani
 CC=clang++
 SERVER_OUTFILE=bin/$(SERVER_NAME)
 CLIENT_OUTFILE=bin/$(CLIENT_NAME)
-SERVER_INFILES=$(wildcard src/$(SERVER_NAME)/*.cpp)
-CLIENT_INFILES=$(wildcard src/$(CLIENT_NAME)/*.cpp)
+SERVER_INFILES=$(wildcard src/server/*.cpp)
+CLIENT_INFILES=$(wildcard src/server/*.cpp)
 TEST_INFILES=$(wildcard test/*.cpp)
 TEST_OUTFILE=bin/test
 SHARED_LIBFILES=$(wildcard src/lib/*.cpp)
 
 .PHONY: default
 
-default: $(SERVER_NAME) $(CLIENT_NAME)
+default: server client
 
-$(SERVER_NAME): 
+server: 
 	set -e; \
 	if [ ! -d bin ]; then mkdir bin; fi; \
 	$(CC) -o $(SERVER_OUTFILE) $(SERVER_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 
 
-$(CLIENT_NAME): 
+client: 
 	set -e; \
 	if [ ! -d bin ]; then mkdir bin; fi; \
 	$(CC) -o $(CLIENT_OUTFILE) $(CLIENT_INFILES) $(SHARED_LIBFILES) $(CFLAGS); 

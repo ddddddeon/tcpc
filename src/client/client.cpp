@@ -146,8 +146,10 @@ void Client::GenerateKeyPair() {
   char *privkey_path = (char *)PrivKeyFileName.c_str();
   char *pubkey_path = (char *)PubKeyFileName.c_str();
 
+  // TODO chmod these files properly
   RSAKeyToFile(_privkey, privkey_path, true);
   RSAKeyToFile(_privkey, pubkey_path, false);
+
   _pubkey = RSAFileToKey(pubkey_path, false);
   _pubkey_string = string((char *)RSAKeyToString(_pubkey, false));
   _pubkey_string = Transport::StripNewLines(_pubkey_string);
