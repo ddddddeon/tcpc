@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-namespace TCPChat {
+namespace TCPC {
 
 std::string const levels[3] = {"INFO", "WARN", "ERROR"};
 
@@ -36,4 +36,4 @@ void Logger::Line(std::string str) { std::cout << str << std::endl; }
 void Logger::Raw(std::string str) { std::cout << str << std::flush; }
 void Logger::Flush() { std::cout << std::flush; }
 
-}  // namespace TCPChat
+}  // namespace TCPC

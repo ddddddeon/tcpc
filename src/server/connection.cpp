@@ -1,3 +1,3 @@
 #include "connection.h"
 
-namespace TCPChat {}  // namespace TCPChat
+namespace TCPC {}  // namespace TCPC

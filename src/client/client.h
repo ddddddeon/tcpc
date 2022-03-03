@@ -11,7 +11,7 @@ using asio::ip::tcp;
 
 #define MAX_INPUT_BUFFER_SIZE 65535
 
-namespace TCPChat {
+namespace TCPC {
 
 struct ClientConfig {
   bool GenerateKeyPair;
@@ -75,4 +75,4 @@ class Client {
   bool LoadKeyPair(std::string path);
 };
 
-}  // namespace TCPChat
+}  // namespace TCPC

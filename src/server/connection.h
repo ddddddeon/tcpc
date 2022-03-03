@@ -8,7 +8,7 @@
 
 using asio::ip::tcp;
 
-namespace TCPChat {
+namespace TCPC {
 
 class Connection {
  public:
@@ -25,6 +25,6 @@ class Connection {
   ~Connection() { DCRYPT_PKEY_free(PubKey); }
 };
 
-}  // namespace TCPChat
+}  // namespace TCPC
 
 #endif /* !CONNECTION_H */

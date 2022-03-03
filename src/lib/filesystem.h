@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace TCPChat {
+namespace TCPC {
 
 namespace Filesystem {
 
@@ -12,6 +12,6 @@ std::string FileToString(std::string path);
 
 }  // namespace Filesystem
 
-}  // namespace TCPChat
+}  // namespace TCPC
 
 #endif /* !FILESYSTEM_H */

@@ -14,7 +14,7 @@
 using asio::ip::tcp;
 using std::string;
 
-namespace TCPChat {
+namespace TCPC {
 
 void Client::Connect() {
   // TODO calculate term width
@@ -211,4 +211,4 @@ void Client::Verify(string response) {
   }
 }
 
-}  // namespace TCPChat
+}  // namespace TCPC

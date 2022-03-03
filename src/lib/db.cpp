@@ -6,7 +6,7 @@
 
 #include "logger.h"
 
-namespace TCPChat {
+namespace TCPC {
 
 void DB::Initialize(std::string path) {
   Logger logger;
@@ -42,4 +42,4 @@ bool DB::Set(std::string name, std::string pubkey) {
   return true;
 }
 
-}  // namespace TCPChat
+}  // namespace TCPC

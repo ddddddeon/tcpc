@@ -14,7 +14,7 @@
 
 using asio::ip::tcp;
 
-namespace TCPChat {
+namespace TCPC {
 
 struct Color {
   std::string name;
@@ -77,6 +77,6 @@ class Server {
   void Stop();
 };
 
-}  // namespace TCPChat
+}  // namespace TCPC
 
 #endif /* !SERVER_H */

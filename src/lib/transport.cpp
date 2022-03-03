@@ -2,7 +2,7 @@
 
 #include <regex>
 
-namespace TCPChat {
+namespace TCPC {
 
 namespace Transport {
 
@@ -42,4 +42,4 @@ std::string ExpandNewLines(std::string key) {
 
 }  // namespace Transport
 
-}  // namespace TCPChat
+}  // namespace TCPC

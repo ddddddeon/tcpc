@@ -1,5 +1,5 @@
-SERVER_NAME=server
-CLIENT_NAME=client
+SERVER_NAME=tcpc-server
+CLIENT_NAME=tcpc
 LIBS=-lpthread -lcrypto -lleveldb -ldcrypt
 CFLAGS=-g -Wall -fuse-ld=lld $(LIBS)#-fsanitize=address -fsanitize=memory -fsanitize=thread
 

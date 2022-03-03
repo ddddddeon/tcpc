@@ -20,7 +20,7 @@ using std::mutex;
 using std::string;
 using std::unique_lock;
 
-namespace TCPChat {
+namespace TCPC {
 
 void Server::Start() {
   asio::io_service service;
@@ -67,7 +67,7 @@ string Server::LoadMOTD(string path) {
         "┌──────────────────────────────────────────────────────────┐\r\n"
         "│                                                          │\r\n"
         "│                                                          │\r\n"
-        "│                   welcome to tcpchat !                   │\r\n"
+        "│                     welcome to tcpc!                     │\r\n"
         "│                                                          │\r\n"
         "│                                                          │\r\n"
         "└──────────────────────────────────────────────────────────┘\r\n";
@@ -295,7 +295,6 @@ int Server::Disconnect(tcp::socket &socket) {
       unique_lock<mutex> connections_lock(_connections_mutex);
       _connections.erase(connection);
       connections_lock.unlock();
-      DCRYPT_PKEY_free(connection->PubKey);
 
       break;
     }
@@ -328,4 +327,4 @@ void Server::Stop() {
   _running = 0;
 }
 
-}  // namespace TCPChat
+}  // namespace TCPC

@@ -1,7 +1,7 @@
 #include <iostream>
 
-namespace TCPChat {
+namespace TCPC {
 
 int main(int argc, char *argv[]) {}
 
-}  // namespace TCPChat
+}  // namespace TCPC

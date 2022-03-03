@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace TCPChat {
+namespace TCPC {
 
 class DB {
  private:
@@ -21,6 +21,6 @@ class DB {
   bool Set(std::string name, std::string pubkey);
 };
 
-}  // namespace TCPChat
+}  // namespace TCPC
 
 #endif /* !DB_H */

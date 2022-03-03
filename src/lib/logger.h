@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace TCPChat {
+namespace TCPC {
 
 const int INFO = 0;
 const int WARN = 1;
@@ -24,6 +24,6 @@ class Logger {
   void Flush();
 };
 
-}  // namespace TCPChat
+}  // namespace TCPC
 
 #endif /* !LOGGER_H */
