@@ -7,7 +7,7 @@ CC=clang++
 SERVER_OUTFILE=bin/$(SERVER_NAME)
 CLIENT_OUTFILE=bin/$(CLIENT_NAME)
 SERVER_INFILES=$(wildcard src/server/*.cpp)
-CLIENT_INFILES=$(wildcard src/server/*.cpp)
+CLIENT_INFILES=$(wildcard src/client/*.cpp)
 TEST_INFILES=$(wildcard test/*.cpp)
 TEST_OUTFILE=bin/test
 SHARED_LIBFILES=$(wildcard src/lib/*.cpp)
@@ -46,10 +46,10 @@ find-bin:
 	@[ -d bin ];
 
 install:
-	@mv bin/$(SERVER_NAME) /usr/bin/$(SERVER_NAME); \
+	@cp bin/$(SERVER_NAME) /usr/bin/$(SERVER_NAME); \
 	chmod a+x /usr/bin/$(SERVER_NAME); \
 	echo "[OK] installed to /usr/bin/$(SERVER_NAME)"; \
-	mv bin/$(CLIENT_NAME) /usr/bin/$(CLIENT_NAME); \
+	cp bin/$(CLIENT_NAME) /usr/bin/$(CLIENT_NAME); \
 	chmod a+x /usr/bin/$(CLIENT_NAME); \
 	echo "[OK] installed to /usr/bin/$(CLIENT_NAME)";
 
