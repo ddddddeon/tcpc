@@ -47,8 +47,12 @@ tcpc -h <host> -p <port> -k /path/to/keypair-folder/
 // A username can be specified on launch
 tcpc -h <host> -p <port> -n alice
 
-/* When a user is in the TCPC terminal, they can authenticate as a user (or claim it if it doesn't exist) by typing `/` followed by the username, and pressing enter. 
+/* When a user is in the TCPC terminal, they can authenticate as a user
+(or claim it if it doesn't exist) by typing `/` followed by the username,
+and pressing enter. 
+
 For example: /alice
+*/
 ```
 
 ## Important
