@@ -2,6 +2,8 @@
 
 A TCP socket-based, public-key authenticated, command-line client/server chat application.
 
+![tcpc](https://user-images.githubusercontent.com/6937171/156499676-1a33dcd1-7d24-4b55-9c26-191ac86ef847.png)
+
 ## Installation
 This application targets Linux only at the present, and depends on [dcrypt](https://github.com/ddddddeon/dcrypt), which itself depends on the OpenSSL `libcrypto` library. Both `TCPC` and `dcrypt` use the clang toolchain for compilation and linking, but the `Makefile` can be tweaked to use GNU build tools instead if you like. As it is, you will need 
 
