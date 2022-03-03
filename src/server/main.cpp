@@ -13,6 +13,7 @@ using namespace TCPC;
 
 namespace ServerConfig {
 
+// TODO figure out a default directory
 std::string DBPath = "./db";
 std::string MOTDPath = "./motd";
 asio::ip::address_v4 Interface = asio::ip::address_v4::loopback();
